@@ -50,7 +50,9 @@ phylogenomics.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/domingoscardoso/catGenes}
+  \item \url{https://dboslab.github.io/catGenes-website/}
+  \item \url{https://github.com/dboslab/catGenes}
+  \item Report bugs at \url{https://github.com/DBOSlab/catGenes/issues}
 }
 
 }
