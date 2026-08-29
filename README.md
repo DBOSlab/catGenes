@@ -59,8 +59,12 @@ You can install the development version from
 [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("DBOSlab/catGenes")
+if (!requireNamespace("BiocManager", quietly = TRUE)) 
+install.packages("BiocManager") 
+
+# Install the development version of catGenes from GitHub, 
+# together with its required dependencies 
+BiocManager::install("DBOSlab/catGenes", dependencies = TRUE)
 ```
 
 ## Input data
