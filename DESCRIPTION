@@ -22,34 +22,36 @@ URL: https://dboslab.github.io/catGenes-website/, https://github.com/dboslab/cat
 BugReports: https://github.com/DBOSlab/catGenes/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends:
-    R (>= 3.5.0), ape, ggtree, rentrez, msa
+    R (>= 4.1.0)
 Imports:
-    dplyr,
-    magrittr,
-    tidyr, 
-    rmarkdown,
-    stringr,
-    R.utils,
-    shiny (>= 1.1.0),
-    shinydashboard,
-    shinyjs,
-    tibble,
-    stats,
-    treeio,
-    ggtext,
-    ggplot2,
+    ape,
+    Biostrings,
     cowplot,
+    dplyr,
+    flora,
+    geneviewer,
+    ggplot2,
+    ggtext,
+    ggtree,
+    glue,
+    magrittr,
+    msa,
     phangorn,
     phytools,
-    msa,
-    Biostrings,
-    geneviewer,
-    flora,
-    glue
+    rentrez,
+    rmarkdown,
+    R.utils,
+    shiny,
+    shinydashboard,
+    shinyjs,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    treeio
 LazyData: true
 Suggests:
-    testthat (>= 3.0.0),
-    rmarkdown
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

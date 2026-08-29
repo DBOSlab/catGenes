@@ -20,9 +20,7 @@ MrBayes block (i.e., \code{begin mrbayes;} ... \code{end;}).}
 \item{mrbayes_dir}{Path to the folder containing the MrBayes executable. On macOS/Linux this is
 typically a folder containing \code{mb}; on Windows, \code{mb.exe}. If the
 executable is not found directly in \code{mrbayes_dir}, the function also checks
-\code{file.path(mrbayes_dir, "bin")}.
-
-Typical values for \code{mrbayes_dir}:
+\code{file.path(mrbayes_dir, "bin")}. Typical values for \code{mrbayes_dir}:
 \itemize{
 \item macOS (Intel, Homebrew): \code{"/usr/local/bin"}
 \item macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
@@ -76,9 +74,9 @@ Output capture:
 \itemize{
 \item \code{stdout}: file path where standard output is recorded.
 \item \code{stderr}: file path where errors/warnings are recorded.
-}
 The function runs MrBayes in \code{run_dir}, so all MrBayes output files
 (e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
+}
 
 Stopping the run:
 \itemize{

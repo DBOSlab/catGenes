@@ -18,6 +18,18 @@
 #' Without \pkg{processx}, the analysis can still be run and live output can be
 #' printed, but stopping is interactive (e.g., Esc in RStudio).
 #'
+#' @details
+#' Output capture:
+#' - \code{stdout}: file path where standard output is recorded.
+#' - \code{stderr}: file path where errors/warnings are recorded.
+#' The function runs MrBayes in \code{run_dir}, so all MrBayes output files
+#' (e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
+#'
+#' Stopping the run:
+#' - With \pkg{processx} + \code{background = TRUE}: call \code{mrbayesStop(res)} or \code{res$stop()}.
+#' - With \pkg{processx} + \code{background = FALSE}: stop interactively (Esc) because the call blocks.
+#' - Without \pkg{processx}: stop interactively (Esc in RStudio).
+#'
 #' @usage
 #' mrbayesRun(nexus_file,
 #'            mrbayes_dir,
@@ -36,15 +48,11 @@
 #' Path to the folder containing the MrBayes executable. On macOS/Linux this is
 #' typically a folder containing \code{mb}; on Windows, \code{mb.exe}. If the
 #' executable is not found directly in \code{mrbayes_dir}, the function also checks
-#' \code{file.path(mrbayes_dir, "bin")}.
-#'
-#' Typical values for \code{mrbayes_dir}:
-#' \itemize{
-#'   \item macOS (Intel, Homebrew): \code{"/usr/local/bin"}
-#'   \item macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
-#'   \item macOS/Linux (local install): \code{"~/.local/bin"} (use \code{path.expand("~/.local/bin")})
-#'   \item Windows (typical): \code{"C:/Program Files/MrBayes"} or a folder containing \code{mb.exe}
-#' }
+#' \code{file.path(mrbayes_dir, "bin")}. Typical values for \code{mrbayes_dir}:
+#' - macOS (Intel, Homebrew): \code{"/usr/local/bin"}
+#' - macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
+#' - macOS/Linux (local install): \code{"~/.local/bin"} (use \code{path.expand("~/.local/bin")})
+#' - Windows (typical): \code{"C:/Program Files/MrBayes"} or a folder containing \code{mb.exe}
 #'
 #' @param run_dir
 #' Directory where the analysis will run. If \code{NULL}, a new folder named
@@ -76,22 +84,6 @@
 #' \pkg{processx} is used, the list additionally includes \code{proc} (a
 #' \pkg{processx} process object) and \code{stop}. When \code{background = TRUE},
 #' the list also includes \code{poll}.
-#'
-#' @details
-#' Output capture:
-#' \itemize{
-#'   \item \code{stdout}: file path where standard output is recorded.
-#'   \item \code{stderr}: file path where errors/warnings are recorded.
-#' }
-#' The function runs MrBayes in \code{run_dir}, so all MrBayes output files
-#' (e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
-#'
-#' Stopping the run:
-#' \itemize{
-#'   \item With \pkg{processx} + \code{background = TRUE}: call \code{mrbayesStop(res)} or \code{res$stop()}.
-#'   \item With \pkg{processx} + \code{background = FALSE}: stop interactively (Esc) because the call blocks.
-#'   \item Without \pkg{processx}: stop interactively (Esc in RStudio).
-#' }
 #'
 #' @examples
 #' \dontrun{

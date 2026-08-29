@@ -119,6 +119,14 @@ same symbols of node support as those plotted in the main edited tree.}
 
 \item{phylogram.height}{A number to adjust the size of the side phylogram.}
 
+\item{support.legend}{Logical, whether to add a legend for node support symbols.
+Defaults to TRUE.}
+
+\item{support.legend.position}{Position of the support legend. Can be a numeric
+vector of length 2 (e.g., c(0.15, 0.95) for top-left) or a character string
+like "top.left", "top.right", "bottom.left", "bottom.right". Defaults to
+c(0.15, 0.95) for top-left corner.}
+
 \item{save}{Logical, if \code{TRUE}, the edited tree will be saved on disk.}
 
 \item{dpi}{One number in the range of 72-4000 referring to the image

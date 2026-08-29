@@ -121,6 +121,14 @@
 #'
 #' @param phylogram.height A number to adjust the size of the side phylogram.
 #'
+#' @param support.legend Logical, whether to add a legend for node support symbols.
+#'   Defaults to TRUE.
+#'
+#' @param support.legend.position Position of the support legend. Can be a numeric
+#'   vector of length 2 (e.g., c(0.15, 0.95) for top-left) or a character string
+#'   like "top.left", "top.right", "bottom.left", "bottom.right". Defaults to
+#'   c(0.15, 0.95) for top-left corner.
+#'
 #' @param save Logical, if \code{TRUE}, the edited tree will be saved on disk.
 #'
 #' @param dpi One number in the range of 72-4000 referring to the image
@@ -232,6 +240,8 @@ plotPhylo <- function(tree = NULL,
                       phylogram.side = FALSE,
                       phylogram.supports = FALSE,
                       phylogram.height = NULL,
+                      support.legend = TRUE,
+                      support.legend.position = c(0.15, 0.95),
                       save = FALSE,
                       dpi = 600,
                       dir = "RESULTS_edited_tree",
@@ -258,15 +268,44 @@ plotPhylo <- function(tree = NULL,
     }
   }
 
+
+
   #-----------------------------------------------------------------------------
-  if (!any(names(tree@data) %in% "prob")) {
-    names(tree@data)[1] = "prob"
+  # Ensure 'prob' column exists and handle NA values
+
+  # Check and create/rename prob column
+  if (!"prob" %in% names(tree@data)) {
+    if (ncol(tree@data) >= 1) {
+      names(tree@data)[1] <- "prob"  # Rename first column to prob
+    } else {
+      tree@data$prob <- NA_real_   # Create new column if empty
+    }
+    if ("node.label" %in% names(tree@phylo)) {
+      tf <- tree@phylo$node.label %in% ""
+      if (any(tf)) tree@phylo$node.label[tf] <- 100
+      tf <- tree@data$prob %in% "Root"
+      if (any(tf)) tree@data$prob[tf] <- ""
+
+      # Get internal node numbers
+      internal_nodes <- (length(tree@phylo$tip.label) + 1):(length(tree@phylo$tip.label) + tree@phylo$Nnode)
+
+      # Create a tibble with node and prob columns
+      prob_tbl <- tibble::tibble(node = internal_nodes, prob = tree@phylo$node.label)
+      tree@data <- prob_tbl
+
+      # Also create the named vector structure for consistency with tree_bayes
+      tree@data[["prob"]] <- setNames(
+        tree@phylo$node.label,
+        paste0("prob", internal_nodes)
+      )
+    }
   }
 
-  # I have added the following code for the examples of input pruned trees with
-  # treeio's function droptip
-  if (any(is.na(tree@data$prob))) {
-    tree@data$prob[is.na(tree@data$prob)] = 0
+  # Replace NA values with 0 (common after tree pruning)
+  na_count <- sum(is.na(tree@data$prob))
+  if (na_count > 0) {
+    tree@data$prob[is.na(tree@data$prob)] <- 0
+    warning(na_count, " NA values in 'prob' were replaced with 0", call. = FALSE)
   }
 
   intree <- tree
@@ -436,70 +475,144 @@ plotPhylo <- function(tree = NULL,
   # Add support values below branches
   if (branch.supports) {
 
-    # Add supports as numbers on the phylogeny
-    if (layout != "circular") {
+    # Extract numeric values from prob (handling combined supports like "0.95/85")
+    tree_plot$data$prob_numeric <- as.numeric(gsub("[/].*", "", as.character(tree_plot$data$prob)))
+
+    # Check if all support values are 1 or 100 (meaning no variation to show as numbers)
+    all_max_support <- FALSE
+    if (!any(intree@data$prob > 1, na.rm = TRUE)) {
+      # For posterior probabilities
+      non_na_probs <- tree_plot$data$prob_numeric[!is.na(tree_plot$data$prob_numeric) & !tree_plot$data$isTip]
+      if (length(non_na_probs) > 0 && all(non_na_probs == 1 | non_na_probs == 0)) {
+        all_max_support <- TRUE
+      }
+    } else {
+      # For bootstrap values
+      non_na_probs <- tree_plot$data$prob_numeric[!is.na(tree_plot$data$prob_numeric) & !tree_plot$data$isTip]
+      if (length(non_na_probs) > 0 && all(non_na_probs == 100 | non_na_probs == 0)) {
+        all_max_support <- TRUE
+      }
+    }
+
+    # Add supports as numbers on the phylogeny (only if not all are 1/100)
+    if (layout != "circular" && !all_max_support) {
       if (!is.null(add.raxml.tree) |
           !is.null(add.parsi.tree)) {
-        if (!any(intree@data$prob > 1)) {
+        if (!any(intree@data$prob > 1, na.rm = TRUE)) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & gsub("[/].*", "", prob) >= 0.5,
+            geom_text2(aes(subset = !isTip & as.numeric(gsub("[/].*", "", prob)) >= 0.5 &
+                             as.numeric(gsub("[/].*", "", prob)) < 1,
                            label = prob),
-                       size = 3, color = "gray40", hjust = 1.1, vjust = 1.5)
+                       size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & gsub("[/].*", "", prob) >= 50,
+            geom_text2(aes(subset = !isTip & as.numeric(gsub("[/].*", "", prob)) >= 50 &
+                             as.numeric(gsub("[/].*", "", prob)) < 100,
                            label = prob),
-                       size = 3, color = "gray40", hjust = 1.1, vjust = 1.5)
+                       size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         }
 
       } else {
-        if (!any(intree@data$prob > 1)) {
+        if (!any(intree@data$prob > 1, na.rm = TRUE)) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & prob>=0.5 & prob<1,
+            geom_text2(aes(subset = !isTip & prob >= 0.5 & prob < 1,
                            label = stringr::str_extract(prob, "[[:digit:]][.][[:digit:]][[:digit:]]")),
                        size = 3, color = "gray40", hjust = 1.5, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & prob>=50 & prob<100,
+            geom_text2(aes(subset = !isTip & as.numeric(gsub("[/].*", "", prob)) >= 50 &
+                             as.numeric(gsub("[/].*", "", prob)) < 100,
                            label = prob),
-                       size = 3, color = "gray40", hjust = 1.5, vjust = 1.5)
+                       size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         }
       }
     }
 
-    # Add supports as symbols on the phylogeny
-    if (!any(intree@data$prob > 1)) {
-      tree_plot <- tree_plot +
-        # Add point when support for node is greater than 0.95 pp
-        geom_point2(aes(subset = prob>=1 & isTip == FALSE), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "black", alpha = 0.8, stroke = 0.05) +
-        geom_point2(aes(subset = prob>=0.9 & prob<1), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "#0072b2", alpha = 0.8, stroke = 0.05) +
-        geom_point2(aes(subset = prob>=0.8 & prob<0.9), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "#e69f00", alpha = 0.8, stroke = 0.05) +
-        geom_point2(aes(subset = prob>=0.7 & prob<0.8), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "#009e73", alpha = 0.8, stroke = 0.05)
+    # Determine support thresholds and create a factor variable for legend
+    if (!any(intree@data$prob > 1, na.rm = TRUE)) {
+      # For posterior probabilities (0-1 scale)
+      support_cat <- cut(
+        tree_plot$data$prob_numeric,
+        breaks = c(-Inf, 0.70, 0.85, 0.95, 0.99, 1),
+        labels = c("< 0.70", "0.70 - 0.85", "0.86 - 0.95", "0.96 - 0.99", "≥ 1.0"),
+        right = FALSE,
+        include.lowest = TRUE
+      )
+      # Fixed legend colors and labels
+      support_colors <- c(
+        "0.70 - 0.85" = "#009e73",
+        "0.86 - 0.95" = "#e69f00",
+        "0.96 - 0.99" = "#0072b2",
+        "≥ 1.0" = "black"
+      )
     } else {
-      tree_plot <- tree_plot +
-        # Add point when support for node is greater than 0.95 pp
-        geom_point2(aes(subset = prob>=100 & isTip == FALSE), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "black", alpha = 0.8, stroke = 0.05) +
-        geom_point2(aes(subset = prob>=90 & prob<100), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "#0072b2", alpha = 0.8, stroke = 0.05) +
-        geom_point2(aes(subset = prob>=80 & prob<90), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "#e69f00", alpha = 0.8, stroke = 0.05) +
-        geom_point2(aes(subset = prob>=70 & prob<80), size = 3,
-                    shape = ifelse(layout != "circular", 22, 21),
-                    fill = "#009e73", alpha = 0.8, stroke = 0.05)
+      # For bootstrap values (0-100 scale)
+      support_cat <- cut(
+        tree_plot$data$prob_numeric,
+        breaks = c(-Inf, 70, 85, 95, 99, 100),
+        labels = c("< 70", "70 - 85", "86 - 95", "96 - 99", "100"),
+        right = FALSE,
+        include.lowest = TRUE
+      )
+      # Fixed legend colors and labels
+      support_colors <- c(
+        "70 - 85" = "#009e73",
+        "86 - 95" = "#e69f00",
+        "96 - 99" = "#0072b2",
+        "100" = "black"
+      )
     }
 
+    # Keep only categories that appear in the data for legend
+    valid_cats <- unique(support_cat[!is.na(support_cat) & !tree_plot$data$isTip])
+    valid_cats <- valid_cats[valid_cats %in% names(support_colors)]
+    support_colors <- support_colors[names(support_colors) %in% valid_cats]
+
+    # Add the support category to tree_plot data
+    tree_plot$data$support_cat <- support_cat
+
+    # Filter out NA values (tips and nodes without support)
+    tree_plot$data$support_cat[is.na(tree_plot$data$prob_numeric) | tree_plot$data$isTip] <- NA
+
+    # Add points with legend (only if there are non-NA categories to show)
+    if (length(valid_cats) > 0) {
+      tree_plot <- tree_plot +
+        geom_point2(
+          aes(subset = !isTip & !is.na(support_cat) & support_cat %in% valid_cats,
+              fill = support_cat),
+          size = 3,
+          shape = ifelse(layout != "circular", 22, 21),
+          alpha = 0.8,
+          stroke = 0.05
+        ) +
+        scale_fill_manual(
+          name = "Node support",
+          values = support_colors,
+          drop = FALSE,
+          na.translate = FALSE,
+          guide = guide_legend(
+            title.position = "top",
+            ncol = 1,
+            byrow = TRUE,
+            override.aes = list(size = 3, shape = 22)
+          )
+        )
+    }
+
+    # Conditionally show or hide legend
+    if (!support.legend || layout == "circular" || length(valid_cats) == 0) {
+      tree_plot <- tree_plot + theme(legend.position = "none")
+    } else {
+      # Position legend at top-left corner with fixed values
+      tree_plot <- tree_plot + theme(
+        legend.position = support.legend.position,
+        legend.justification = c(0, 1),
+        legend.background = element_rect(fill = "white", color = "gray80", size = 0.3),
+        legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 9, face = "bold")
+      )
+    }
   }
 
   # Add gene labels
@@ -542,21 +655,21 @@ plotPhylo <- function(tree = NULL,
         phylogram <- phylogram +
           geom_point2(aes(subset = prob>=1 & isTip == FALSE), size = 1.5, shape = 22,
                       fill = "black", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=0.9 & prob<1), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob>=0.96 & prob<1), size = 1.5, shape = 22,
                       fill = "#0072b2", alpha=0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=0.8 & prob<0.9), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob>=0.86 & prob<0.96), size = 1.5, shape = 22,
                       fill = "#e69f00", alpha=0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=0.7 & prob<0.8), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob>=0.7 & prob<0.86), size = 1.5, shape = 22,
                       fill = "#009e73", alpha = 0.8, stroke = 0.05)
       } else {
         phylogram <- phylogram +
           geom_point2(aes(subset = prob>=100 & isTip == FALSE), size = 1.5, shape = 22,
                       fill = "black", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=90 & prob<100), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob>=96 & prob<100), size = 1.5, shape = 22,
                       fill = "#0072b2", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=80 & prob<90), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob>=86 & prob<96), size = 1.5, shape = 22,
                       fill = "#e69f00", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=70 & prob<80), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob>=70 & prob<86), size = 1.5, shape = 22,
                       fill = "#009e73", alpha = 0.8, stroke = 0.05)
       }
     }
@@ -647,7 +760,6 @@ plotPhylo <- function(tree = NULL,
 
     data_tree$descendants[tf][i] <- list(t)
   }
-
 
   #-----------------------------------------------------------------------------
   # Extract RAxML bootstrap values for all internal nodes
