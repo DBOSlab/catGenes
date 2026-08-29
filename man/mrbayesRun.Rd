@@ -54,7 +54,7 @@ A list with (at minimum) \code{exe_path}, \code{run_dir}, \code{nexus_path},
 the list also includes \code{poll}.
 }
 \description{
-Runs a Bayesian phylogenetic analysis in
+Run a Bayesian phylogenetic analysis in
 \href{https://nbisweden.github.io/MrBayes/}{MrBayes} directly from R/RStudio using a
 pre-configured NEXUS file that already contains a complete \code{begin mrbayes;}
 command block. The function copies (or moves) the NEXUS file to a dedicated run

@@ -3,7 +3,7 @@
 #' @author Domingos Cardoso
 #'
 #' @description
-#' Runs a Bayesian phylogenetic analysis in
+#' Run a Bayesian phylogenetic analysis in
 #' [MrBayes](https://nbisweden.github.io/MrBayes/) directly from R/RStudio using a
 #' pre-configured NEXUS file that already contains a complete \code{begin mrbayes;}
 #' command block. The function copies (or moves) the NEXUS file to a dedicated run
