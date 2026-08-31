@@ -66,6 +66,119 @@ test_that("plotPhylo abbreviates tip labels via abbrevGen when requested", {
   expect_s3_class(p, "ggplot")
 })
 
+test_that("plotPhylo renders the full documented example (clades, gene labels, side phylogram)", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  data(Harpalyce_parsimony_tree, package = "catGenes", envir = environment())
+  data(Harpalyce_raxml_tree, package = "catGenes", envir = environment())
+  outdir <- withr::local_tempdir()
+
+  Harpalyce_clade <- c("Harpalyce_brasiliana_Cardoso2510", "Harpalyce_formosa_Hughes2109")
+  outgroup_taxa <- c("Dermatophyllum_secundiflorum", "Clathrotropis_nitida",
+                     "Bowdichia_virgilioides")
+
+  p <- plotPhylo(tree = Harpalyce_bayes_tree,
+                 layout = "rectangular",
+                 branch.width = 0.5,
+                 branch.supports = TRUE,
+                 add.raxml.tree = Harpalyce_raxml_tree,
+                 add.parsi.tree = Harpalyce_parsimony_tree,
+                 highlight.clade = Harpalyce_clade,
+                 fill.gradient = "#D53E4F",
+                 show.tip.label = TRUE,
+                 understate.taxa = outgroup_taxa,
+                 gene.label = c("ITS/5.8S", "ETS", "matK", "trnL intron"),
+                 phylogram.side = TRUE,
+                 phylogram.supports = TRUE,
+                 phylogram.height = 25,
+                 save = TRUE,
+                 dir = outdir,
+                 format = "pdf")
+
+  expect_s3_class(p, "ggtree")
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  # save = TRUE with no explicit filename defaults to "edited_tree_<layout>"
+  expect_true(file.exists(file.path(foldername, "edited_tree_rectangular.pdf")))
+})
+
+test_that("plotPhylo replaces taxon names and disables the support legend", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+
+  p <- plotPhylo(tree = Harpalyce_bayes_tree,
+                 replace.taxa = setNames("Renamed_taxon", tips[1]),
+                 support.legend = FALSE,
+                 branch.supports = FALSE,
+                 save = FALSE)
+
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plotPhylo custom xlim.tree/hexpand render without error", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+
+  p <- plotPhylo(tree = Harpalyce_bayes_tree,
+                 xlim.tree = c(0, 1),
+                 hexpand = 0.2,
+                 save = FALSE)
+
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plotPhylo fancy.tip.label renders Markdown-formatted tip labels with highlighted taxa", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+
+  p <- plotPhylo(tree = Harpalyce_bayes_tree,
+                 fancy.tip.label = TRUE,
+                 highlight.taxa = tips[1:2],
+                 highlight.color = "blue",
+                 save = FALSE)
+
+  expect_s3_class(p, "ggtree")
+})
+
+test_that("plotPhylo fancy.tip.label renders with understated taxa", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+
+  p <- plotPhylo(tree = Harpalyce_bayes_tree,
+                 fancy.tip.label = TRUE,
+                 understate.taxa = tips[3:4],
+                 save = FALSE)
+
+  expect_s3_class(p, "ggtree")
+})
+
+test_that("plotPhylo fancy.tip.label combines highlight + understate + abbreviated genus", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+
+  p <- plotPhylo(tree = Harpalyce_bayes_tree,
+                 fancy.tip.label = TRUE,
+                 highlight.taxa = tips[1:2],
+                 highlight.color = "blue",
+                 understate.taxa = tips[3:4],
+                 abbrev.tip.label = TRUE,
+                 save = FALSE)
+
+  expect_s3_class(p, "ggtree")
+})
+
+test_that("plotPhylo saves to PNG, JPG, and TIFF formats", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  outdir <- withr::local_tempdir()
+
+  for (fmt in c("png", "jpg", "tiff")) {
+    plotPhylo(tree = Harpalyce_bayes_tree, save = TRUE, dir = outdir,
+             filename = paste0("tree_", fmt), format = fmt)
+  }
+
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  expect_true(file.exists(file.path(foldername, "tree_png.png")))
+  expect_true(file.exists(file.path(foldername, "tree_jpg.jpg")))
+  expect_true(file.exists(file.path(foldername, "tree_tiff.tiff")))
+})
+
 test_that("plotPhylo saves a file to disk when save = TRUE", {
   data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
   outdir <- withr::local_tempdir()

@@ -59,6 +59,18 @@ test_that("catfullGenes with missdata = FALSE and outgroup keeps the outgroup ta
   expect_true(grepl("^[?]+$", delta_seq))
 })
 
+test_that("catfullGenes missdata = FALSE with an outgroup present in only one gene", {
+  geneA <- fixture_geneA_full()
+  geneC <- fixture_geneC_partial()
+  names(geneC)[1] <- "Genus_zeta_V9"
+
+  out <- catfullGenes(geneA, geneC, missdata = FALSE, outgroup = "Genus_zeta", verbose = FALSE)
+
+  expect_true(any(grepl("^Genus_zeta", out[[1]]$species)))
+  expect_true(any(grepl("^Genus_zeta", out[[2]]$species)))
+  expect_equal(nrow(out[[1]]), nrow(out[[2]]))
+})
+
 test_that("catfullGenes errors when given a single gene dataset (ambiguous with a list-of-genes)", {
   # Passing just one gene alignment cannot be distinguished internally from a
   # single list of >= 2 gene datasets, so it fails downstream rather than with

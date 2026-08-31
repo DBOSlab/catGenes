@@ -48,11 +48,8 @@
 #' Date: \tab 2020-10-25\cr
 #' }
 #'
-#' @references Cardoso, D. & Cavalcante, Q. (2024). catGenes: a new R package for
-#' combining multiple DNA alignments for multigene analysis in phylogenetics and
-#' phylogenomics.
-#'
-#' @import dplyr magrittr tidyr stringr R.utils rmarkdown ape shiny shinydashboard shinyjs tibble stats ggtree ggtext ggplot2 cowplot phangorn phytools flora glue
+#' @references Cardoso, D. & Cavalcante, Q. (2026). catGenes: Tools for DNA
+#' Alignment Concatenation, Sequence Mining, and Phylogenetic Analysis
 #'
 "_PACKAGE"
 

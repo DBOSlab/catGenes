@@ -72,6 +72,32 @@ test_that("fastadframe writes a well-formed FASTA file", {
   expect_equal(sum(grepl("^>", lines)), nrow(df))
 })
 
+test_that("fastadframe accepts a list-formatted NEXUS object (as from ape::read.nexus.data)", {
+  gene <- fixture_geneA_full()
+  tmp <- withr::local_tempfile(fileext = ".fasta")
+
+  fastadframe(gene, file = tmp)
+
+  lines <- readLines(tmp)
+  expect_equal(lines[1], ">Genus_alpha_V1")
+})
+
+test_that("fastadframe errors when given a single-column data.frame", {
+  df <- data.frame(species = c("a", "b"))
+  tmp <- withr::local_tempfile(fileext = ".fasta")
+  expect_error(fastadframe(df, file = tmp), "two-column")
+})
+
+test_that("fastadframe renames non-standard column names to species/sequence", {
+  df <- data.frame(taxon = "Genus_alpha", dna = "ACGT", stringsAsFactors = FALSE)
+  tmp <- withr::local_tempfile(fileext = ".fasta")
+
+  fastadframe(df, file = tmp)
+
+  lines <- readLines(tmp)
+  expect_equal(lines, c(">Genus_alpha", "ACGT"))
+})
+
 test_that("fastadframe drops sequences that are entirely missing data", {
   df <- data.frame(species = c("sp1", "sp2"),
                    sequence = c("????", "ACGT"),

@@ -34,6 +34,33 @@ test_that("combineFASTA errors when input_files is missing", {
   expect_error(combineFASTA(input_files = NULL), "required")
 })
 
+test_that("combineFASTA errors when input_files is not a character vector", {
+  expect_error(combineFASTA(input_files = 123), "character vector")
+})
+
 test_that("combineFASTA errors when a specified file does not exist", {
   expect_error(combineFASTA(input_files = "does_not_exist.fasta"), "do not exist")
+})
+
+test_that("combineFASTA prints progress messages when verbose = TRUE", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+  f1 <- file.path(indir, "file1.fasta")
+  fastadframe(fixture_seq_dframe(), file = f1)
+
+  expect_message(combineFASTA(input_files = f1, verbose = TRUE, dir = outdir),
+                 "COMBINATION COMPLETE")
+})
+
+test_that("combineFASTA skips a FASTA file with no sequences and warns on unreadable files", {
+  indir <- withr::local_tempdir()
+  empty_file <- file.path(indir, "empty.fasta")
+  writeLines(character(0), empty_file)
+  f1 <- file.path(indir, "file1.fasta")
+  fastadframe(fixture_seq_dframe(), file = f1)
+
+  expect_message(result <- combineFASTA(input_files = c(empty_file, f1),
+                                        verbose = TRUE, save = FALSE),
+                 "No sequences found")
+  expect_equal(result$summary$total_files, 1)
 })

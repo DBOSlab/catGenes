@@ -5,7 +5,8 @@
 \title{Removes duplicated accessions of the same species in DNA alignments}
 \usage{
 dropSeq(\dots,
-        shortaxlabel = FALSE)
+        shortaxlabel = FALSE,
+        verbose = TRUE)
 }
 \arguments{
 \item{...}{one or a list of NEXUS-formatted gene datasets as loaded by ape's
@@ -15,6 +16,9 @@ the function \code{\link{catmultGenes}}.}
 
 \item{shortaxlabel}{Logical, if \code{TRUE} the final individual gene dataset will delete
 the accession numbers associated with each species or sequence.}
+
+\item{verbose}{Logical, if \code{FALSE}, a message showing progress during
+the removal of duplicated accessions will not be printed in the console.}
 }
 \value{
 A list of dataframe(s) containing the input DNA alignment(s), where duplicated

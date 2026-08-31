@@ -31,6 +31,40 @@ test_that("writeNexus non-interleaved fully concatenates sequences per taxon", {
   expect_true(any(grepl("ACGTACGTACTTGGCCAATT", lines)))
 })
 
+test_that("writeNexus keeps collector identifiers for duplicated accessions (catmultGenes output)", {
+  geneA <- fixture_geneA_mult()
+  geneB <- fixture_geneB_mult()
+  catdf <- catmultGenes(geneA, geneB,
+                        maxspp = TRUE,
+                        shortaxlabel = FALSE,
+                        missdata = TRUE,
+                        verbose = FALSE)
+  tmp <- withr::local_tempfile(fileext = ".nex")
+
+  writeNexus(catdf, file = tmp, verbose = FALSE)
+
+  lines <- readLines(tmp)
+  expect_true(any(grepl("Genus_alpha_Coll1", lines)))
+  expect_true(any(grepl("Genus_alpha_Coll2", lines)))
+})
+
+test_that("writeNexus genomics = TRUE keeps identifiers for all species, not just duplicates", {
+  geneA <- fixture_geneA_mult()
+  geneB <- fixture_geneB_mult()
+  catdf <- catmultGenes(geneA, geneB,
+                        maxspp = TRUE,
+                        shortaxlabel = FALSE,
+                        missdata = TRUE,
+                        verbose = FALSE)
+  tmp <- withr::local_tempfile(fileext = ".nex")
+
+  writeNexus(catdf, file = tmp, genomics = TRUE, verbose = FALSE)
+
+  lines <- readLines(tmp)
+  expect_true(any(grepl("Genus_beta_Coll3", lines)))
+  expect_true(any(grepl("Genus_gamma_Coll4", lines)))
+})
+
 test_that("writeNexus errors when given a single non-list gene dataset", {
   tmp <- withr::local_tempfile(fileext = ".nex")
   expect_error(writeNexus(fixture_geneA_full(), file = tmp, verbose = FALSE))

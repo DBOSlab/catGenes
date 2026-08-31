@@ -30,6 +30,39 @@ test_that("convertAlign converts a NEXUS file into PHYLIP format", {
   expect_true(grepl("[.]phy$", converted))
 })
 
+test_that("convertAlign converts a PHYLIP file into NEXUS format", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+
+  df <- fixture_seq_dframe()
+  phylipdframe(df, file = file.path(indir, "gene1.phy"))
+
+  convertAlign(filepath = indir, format = "NEXUS", verbose = FALSE, dir = outdir)
+
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  converted <- list.files(foldername, full.names = TRUE)
+  expect_length(converted, 1)
+  lines <- readLines(converted)
+  expect_true(any(grepl("Genus_alpha", lines)))
+})
+
+test_that("convertAlign converts a NEXUS file into FASTA format", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+
+  df <- fixture_seq_dframe()
+  nexusdframe(df, file = file.path(indir, "gene1.nex"))
+
+  convertAlign(filepath = indir, format = "FASTA", verbose = FALSE, dir = outdir)
+
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  converted <- list.files(foldername, full.names = TRUE)
+  expect_length(converted, 1)
+  expect_true(grepl("[.]fasta$", converted))
+  lines <- readLines(converted)
+  expect_equal(lines[1], ">Genus_alpha")
+})
+
 test_that("convertAlign skips a file already in the target format", {
   indir <- withr::local_tempdir()
   outdir <- withr::local_tempdir()

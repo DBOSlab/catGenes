@@ -18,6 +18,41 @@ test_that("writePhylip writes a concatenated PHYLIP matrix and a RAxML partition
   expect_true(any(grepl("DNA, gene2 = 11-20", partition_lines)))
 })
 
+test_that("writePhylip keeps collector identifiers for duplicated accessions (catmultGenes output)", {
+  geneA <- fixture_geneA_mult()
+  geneB <- fixture_geneB_mult()
+  catdf <- catmultGenes(geneA, geneB,
+                        maxspp = TRUE,
+                        shortaxlabel = FALSE,
+                        missdata = TRUE,
+                        verbose = FALSE)
+  tmp <- withr::local_tempfile(fileext = ".phy")
+
+  writePhylip(catdf, file = tmp, verbose = FALSE)
+
+  lines <- readLines(tmp)
+  expect_true(any(grepl("Genus_alpha_Coll1", lines)))
+  expect_true(any(grepl("Genus_alpha_Coll2", lines)))
+  expect_true(any(grepl("^Genus_beta\\s", lines)))
+})
+
+test_that("writePhylip genomics = TRUE keeps identifiers for all species, not just duplicates", {
+  geneA <- fixture_geneA_mult()
+  geneB <- fixture_geneB_mult()
+  catdf <- catmultGenes(geneA, geneB,
+                        maxspp = TRUE,
+                        shortaxlabel = FALSE,
+                        missdata = TRUE,
+                        verbose = FALSE)
+  tmp <- withr::local_tempfile(fileext = ".phy")
+
+  writePhylip(catdf, file = tmp, genomics = TRUE, verbose = FALSE)
+
+  lines <- readLines(tmp)
+  expect_true(any(grepl("Genus_beta_Coll3", lines)))
+  expect_true(any(grepl("Genus_gamma_Coll4", lines)))
+})
+
 test_that("writePhylip skips the partition file when partitionfile = FALSE", {
   geneA <- fixture_geneA_full()
   geneB <- fixture_geneB_full()
