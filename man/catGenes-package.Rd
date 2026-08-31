@@ -49,6 +49,7 @@ Alignment Concatenation, Sequence Mining, and Phylogenetic Analysis
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://dboslab.github.io/catGenes-website/}
   \item \url{https://github.com/DBOSlab/catGenes}
   \item Report bugs at \url{https://github.com/DBOSlab/catGenes/issues}
 }
