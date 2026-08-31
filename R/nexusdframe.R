@@ -20,7 +20,7 @@
 #' @param x The object to be written, any two-column-sized \code{data.frame} where
 #' the first column contains the taxon names and the second column the DNA sequence.
 #' Otherwise, the object may be a list-formatted NEXUS file as originally
-#' imported with \code{\link{ape}}'s function \code{\link[ape]{read.nexus.data}}.
+#' imported with \code{ape}'s function \code{\link[ape]{read.nexus.data}}.
 #'
 #' @param file Either a character string naming a file or a \code{\link{connection}}
 #'  open for writing.
