@@ -53,12 +53,17 @@ importFrom(ggplot2,
   annotate,
   annotation_custom,
   element_rect,
+  element_text,
   ggplotGrob,
+  guide_legend,
   scale_colour_manual,
-  theme
+  scale_fill_manual,
+  theme,
+  unit
 )
 importFrom(ggtext,geom_richtext)
 importFrom(ggtree,
+  "%<+%",
   MRCA,
   geom_hilight,
   geom_point2,

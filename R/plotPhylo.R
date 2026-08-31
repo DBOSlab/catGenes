@@ -198,10 +198,10 @@
 #'           format = "pdf")
 #'}
 #'
-#' @importFrom ggtree ggtree MRCA geom_tiplab geom_hilight xlim_tree geom_text2 geom_point2 geom_treescale geom_tree hexpand td_filter
+#' @importFrom ggtree ggtree MRCA geom_tiplab geom_hilight xlim_tree geom_text2 geom_point2 geom_treescale geom_tree hexpand td_filter "%<+%"
 #' @importFrom ggtext geom_richtext
 #' @importFrom treeio isTip
-#' @importFrom ggplot2 annotate annotation_custom aes scale_colour_manual ggplotGrob element_rect theme
+#' @importFrom ggplot2 annotate annotation_custom aes scale_colour_manual scale_fill_manual ggplotGrob element_rect element_text theme guide_legend unit
 #' @importFrom cowplot save_plot
 #' @importFrom phangorn Descendants
 #' @importFrom phytools getDescendants
