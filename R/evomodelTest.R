@@ -59,6 +59,7 @@
 #' @importFrom tools file_path_sans_ext
 #' @importFrom phangorn read.phyDat modelTest pml.control
 #' @importFrom ape base.freq as.DNAbin
+#' @importFrom utils write.csv
 #'
 #' @export
 #'
@@ -200,7 +201,7 @@ evomodelTest <- function(nexus_file_path = NULL,
 
     # Save raw results
     raw_results_file <- file.path(foldername, paste0(base_name, "_model_test_raw.csv"))
-    write.csv(model_test, raw_results_file, row.names = FALSE)
+    utils::write.csv(model_test, raw_results_file, row.names = FALSE)
 
     # Calculate AIC and BIC weights
     aic_weights <- exp(-0.5 * (model_test$AIC - min(model_test$AIC)))

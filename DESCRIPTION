@@ -39,6 +39,7 @@ Imports:
     msa,
     phangorn,
     phytools,
+    processx,
     rentrez,
     rmarkdown,
     R.utils,
