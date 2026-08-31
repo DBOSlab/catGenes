@@ -5,7 +5,7 @@
 \alias{Harpalyce_bayes_tree}
 \title{Bayesian tree of the papilionoid legume genus Harpalyce}
 \format{
-A ggtree phylo object as read by treeio's function \code{\link{read.beast}}.
+A ggtree phylo object as read by \code{\link[treeio]{read.beast}}.
 }
 \usage{
 data(Harpalyce_bayes_tree)

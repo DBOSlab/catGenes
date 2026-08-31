@@ -8,7 +8,9 @@
 #' disambiguation.
 #'
 #' @usage
-#' abbrevGen(tiplabels = NULL)
+#' abbrevGen(tiplabels = NULL,
+#'           abbrevfull = TRUE,
+#'           abbrevmult = FALSE)
 #'
 #' @param tiplabels A vector of genus names or tip labels to be abbreviated.
 #'

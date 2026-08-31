@@ -24,7 +24,7 @@
 #'              outgroup = NULL,
 #'              verbose = TRUE)
 #'
-#' @param ... a list of NEXUS-formatted gene datasets as read by ape's \code{\link{read.nexus.data}}
+#' @param ... a list of NEXUS-formatted gene datasets as read by \code{\link[ape]{read.nexus.data}}
 #' or at least two individually ape-read objects of NEXUS-formatted gene datasets.
 #'
 #' @param maxspp Logical, if \code{FALSE} any species never duplicated with

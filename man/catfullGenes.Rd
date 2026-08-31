@@ -11,7 +11,7 @@ catfullGenes(\dots,
              verbose = TRUE)
 }
 \arguments{
-\item{...}{a list of NEXUS-formatted gene datasets as read by ape's \code{\link{read.nexus.data}}
+\item{...}{a list of NEXUS-formatted gene datasets as read by \code{\link[ape]{read.nexus.data}}
 or at least two individually ape-read objects of NEXUS-formatted gene datasets.}
 
 \item{shortaxlabel}{Logical, if \code{FALSE} the final individual gene dataset will maintain

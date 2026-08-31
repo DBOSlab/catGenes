@@ -18,7 +18,7 @@ Authors@R:
 Maintainer: Domingos Cardoso <domingoscardoso@jbrj.gov.br>
 Description: Provides tools for assembling and preparing multilocus DNA datasets for phylogenetic and phylogenomic analyses. The package supports comparison and concatenation of multiple alignments with or without duplicated taxa/accessions, conversion among common alignment formats, and writing concatenated datasets in NEXUS and PHYLIP formats with partition information. It also includes functions to retrieve DNA sequences and targeted loci from GenBank, including plastid and mitochondrial genomes, perform evolutionary model selection, generate MrBayes command blocks, run MrBayes from R, and visualize phylogenetic trees with 'ggtree'. These features are designed to facilitate data assembly, dataset standardization, phylogenetic inference, and tree presentation within reproducible workflows.
 License: MIT + file LICENSE
-URL: https://dboslab.github.io/catGenes-website/, https://github.com/dboslab/catGenes
+URL: https://dboslab.github.io/catGenes-website/, https://github.com/DBOSlab/catGenes
 BugReports: https://github.com/DBOSlab/catGenes/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -41,11 +41,7 @@ Imports:
     phytools,
     processx,
     rentrez,
-    rmarkdown,
     R.utils,
-    shiny,
-    shinydashboard,
-    shinyjs,
     stats,
     stringr,
     tibble,

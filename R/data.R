@@ -8,7 +8,7 @@
 #' Luetzelburgia, containing nuclear ribossomal (ETS, ITS) and plastid
 #' (matK, psbA-trnH, rpS16, trnD-T, trnK intron, trnL intron, trnQ) genes.
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source <https://onlinelibrary.wiley.com/doi/10.12705/675.6>
 #'
@@ -26,7 +26,7 @@ NULL
 #' containing nuclear ribossomal (ETS, ITS) and plastid (matK, psbA-trnH, rpS16,
 #' trnD-T, trnL intron, trnQ) genes.
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source <https://bsapubs.onlinelibrary.wiley.com/doi/10.3732/ajb.1200276>
 #'
@@ -44,7 +44,7 @@ NULL
 #' Brongniartia of papilinoid legumes, containing
 #' nuclear ribossomal (ITS, ETS) and plastid (matK, trnLF) genes.
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source Dorado, Snak, São-Mateus, Delgado-Salinas, Queiroz  & Cardoso (unpubl. data)
 #'
@@ -62,7 +62,7 @@ NULL
 #' genus Ormosia, containing nuclear ribossomal (ITS) and plastid (matK, trnK intron,
 #' trnLF) genes.
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source <https://bsapubs.onlinelibrary.wiley.com/doi/10.3732/ajb.1200276>
 #'
@@ -79,7 +79,7 @@ NULL
 #' @description List of three individual DNA alignments of the neotropical genus
 #' Gaya (Malvaceae), containing nuclear ribossomal (ITS) and plastid (petL-psbE, rpL16) genes.
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source <https://www.ingentaconnect.com/content/aspt/sb/2018/00000043/00000003/art00004;jsessionid=20r008g64rupe.x-ic-live-02>
 #'
@@ -97,7 +97,7 @@ NULL
 #' Cryptocarya (Lauraceae), containing the nuclear ribossomal (ITS) and plastid
 #' (matK, psbA, rbcL) genes.
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source Moraes, Cardoso, et al. (unpubl. data)
 #'
@@ -115,7 +115,7 @@ NULL
 #' seven other families of Myrtales as originally used to investigate the historical biogeography
 #' of Vochysiaceae across the Neotropics (Goncalves et al. 2020).
 #'
-#' @format DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 #'
 #' @source <https://doi.org/10.5061/dryad.sn02v6x1g>
 #' @source <https://bsapubs.onlinelibrary.wiley.com/doi/abs/10.1002/ajb2.1502>
@@ -135,7 +135,7 @@ NULL
 #' of combined nuclear (ITS, ETS) and plastid (matK, trnL intron) DNA sequence
 #' data.
 #'
-#' @format A ggtree phylo object as read by treeio's function \code{\link{read.beast}}.
+#' @format A ggtree phylo object as read by \code{\link[treeio]{read.beast}}.
 #'
 #' @usage data(Harpalyce_bayes_tree)
 
@@ -152,7 +152,7 @@ NULL
 #' analysis of combined nuclear (ITS, ETS) and plastid (matK, trnL intron) DNA
 #' sequence data.
 #'
-#' @format A ggtree phylo object as read by treeio's function \code{\link{read.beast}}.
+#' @format A ggtree phylo object as read by \code{\link[treeio]{read.beast}}.
 #'
 #' @usage data(Harpalyce_parsimony_tree)
 
@@ -168,7 +168,7 @@ NULL
 #' a focus on the genus Harpalyce, based on maximum likelihood analysis of
 #' combined nuclear (ITS, ETS) and plastid (matK, trnL intron) DNA sequence data.
 #'
-#' @format A ggtree phylo object as read by treeio's function \code{\link{read.raxml}}.
+#' @format A ggtree phylo object as read by \code{\link[treeio]{read.raxml}}.
 #'
 #' @usage data(Harpalyce_raxml_tree)
 

@@ -5,7 +5,7 @@
 \alias{Brongniartia}
 \title{DNA alignments of the papilionid legume genus Brongniartia}
 \format{
-DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 }
 \source{
 Dorado, Snak, São-Mateus, Delgado-Salinas, Queiroz  & Cardoso (unpubl. data)

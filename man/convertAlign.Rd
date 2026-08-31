@@ -7,7 +7,8 @@
 convertAlign(filepath = NULL,
              format = NULL,
              rmfiles = FALSE,
-             dir = NULL)
+             verbose = TRUE,
+             dir = "RESULTS_convertAlign")
 }
 \arguments{
 \item{filepath}{Path to the directory where the DNA alignments are stored.}
@@ -17,6 +18,9 @@ the resulting newly converted files.}
 
 \item{rmfiles}{Logical, if \code{TRUE}, the original input file(s) are removed
 from the directory and only the newly converted files are kept.}
+
+\item{verbose}{Logical, if \code{FALSE}, a message showing each step during
+the analysis will not be printed in the console in full.}
 
 \item{dir}{The path to the directory where the newly converted files should
 be saved. If no directory is given, then the files will saved in a subfolder

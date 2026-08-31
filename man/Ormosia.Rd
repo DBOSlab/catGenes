@@ -5,7 +5,7 @@
 \alias{Ormosia}
 \title{DNA alignments of the pantropical legume genus Ormosia}
 \format{
-DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 }
 \source{
 \url{https://bsapubs.onlinelibrary.wiley.com/doi/10.3732/ajb.1200276}

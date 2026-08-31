@@ -261,9 +261,9 @@ evomodelTest <- function(nexus_file_path = NULL,
 
     cat("BEST MODEL BY EACH CRITERION:\n")
     cat(rep("-", 50), "\n", sep = "")
-    cat("AIC  :", best_aic$Model, "(ΔAIC = 0.000)\n")
-    cat("AICc :", best_aicc$Model, "(ΔAICc = 0.000)\n")
-    cat("BIC  :", best_bic$Model, "(ΔBIC = 0.000)\n\n")
+    cat("AIC  :", best_aic$Model, "(\u0394AIC = 0.000)\n")
+    cat("AICc :", best_aicc$Model, "(\u0394AICc = 0.000)\n")
+    cat("BIC  :", best_bic$Model, "(\u0394BIC = 0.000)\n\n")
 
     cat("AIC WEIGHTS (relative support):\n")
     cat(rep("-", 50), "\n", sep = "")

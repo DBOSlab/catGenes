@@ -9,7 +9,8 @@
 #' convertAlign(filepath = NULL,
 #'              format = NULL,
 #'              rmfiles = FALSE,
-#'              dir = NULL)
+#'              verbose = TRUE,
+#'              dir = "RESULTS_convertAlign")
 #'
 #' @param filepath Path to the directory where the DNA alignments are stored.
 #'
@@ -18,6 +19,9 @@
 #'
 #' @param rmfiles Logical, if \code{TRUE}, the original input file(s) are removed
 #' from the directory and only the newly converted files are kept.
+#'
+#' @param verbose Logical, if \code{FALSE}, a message showing each step during
+#' the analysis will not be printed in the console in full.
 #'
 #' @param dir The path to the directory where the newly converted files should
 #' be saved. If no directory is given, then the files will saved in a subfolder

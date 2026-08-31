@@ -5,7 +5,7 @@
 \alias{Vochysiaceae}
 \title{Plastome dataset of Vochysiaceae (Myrtales)}
 \format{
-DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 }
 \source{
 \url{https://doi.org/10.5061/dryad.sn02v6x1g}

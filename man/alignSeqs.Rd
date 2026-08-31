@@ -4,7 +4,7 @@
 \alias{alignSeqs}
 \title{Automated multiple sequence alignment}
 \usage{
-alignSeqs(filepath = GenBank_accessions,
+alignSeqs(filepath = NULL,
           method = NULL,
           gapOpening = "default",
           format = "NEXUS",
@@ -20,7 +20,7 @@ are stored.}
 "ClustalW" and "Muscle" are supported.}
 
 \item{gapOpening}{Gap opening penalty; the defaults are specific to the
-algorithm (see \code{\link{msaClustalW}} and \code{\link{msaMuscle)}}. Note
+algorithm (see \code{\link[msa]{msaClustalW}} and \code{\link[msa]{msaMuscle}}. Note
 that the sign of this parameter is ignored. The sign is automatically adjusted
 such that the called algorithm penalizes gaps instead of rewarding them.}
 

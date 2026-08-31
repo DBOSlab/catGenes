@@ -16,7 +16,7 @@
 #'           highlight.clade = NULL,
 #'           fill.gradient = NULL,
 #'           show.tip.label = TRUE,
-#'           size.tip.label = 2,
+#'           size.tip.label = 4,
 #'           fontface.tip.label = "italic",
 #'           fancy.tip.label = FALSE,
 #'           abbrev.tip.label = FALSE,
@@ -28,10 +28,13 @@
 #'           xlim.tree = NULL,
 #'           hexpand = NULL,
 #'           gene.label = NULL,
+#'           size.gene.label = 12,
 #'           ylim.gene.label = NULL,
 #'           phylogram.side = FALSE,
 #'           phylogram.supports = FALSE,
 #'           phylogram.height = NULL,
+#'           support.legend = TRUE,
+#'           support.legend.position = c(0.15, 0.95),
 #'           save = FALSE,
 #'           dpi = 600,
 #'           dir = "RESULTS_edited_tree",
@@ -534,7 +537,7 @@ plotPhylo <- function(tree = NULL,
       support_cat <- cut(
         tree_plot$data$prob_numeric,
         breaks = c(-Inf, 0.70, 0.85, 0.95, 0.99, 1),
-        labels = c("< 0.70", "0.70 - 0.85", "0.86 - 0.95", "0.96 - 0.99", "≥ 1.0"),
+        labels = c("< 0.70", "0.70 - 0.85", "0.86 - 0.95", "0.96 - 0.99", "\u2265 1.0"),
         right = FALSE,
         include.lowest = TRUE
       )
@@ -543,7 +546,7 @@ plotPhylo <- function(tree = NULL,
         "0.70 - 0.85" = "#009e73",
         "0.86 - 0.95" = "#e69f00",
         "0.96 - 0.99" = "#0072b2",
-        "≥ 1.0" = "black"
+        "\u2265 1.0" = "black"
       )
     } else {
       # For bootstrap values (0-100 scale)

@@ -5,7 +5,7 @@
 \alias{Harpalyce_raxml_tree}
 \title{RAxML tree of the papilionoid legume genus Harpalyce}
 \format{
-A ggtree phylo object as read by treeio's function \code{\link{read.raxml}}.
+A ggtree phylo object as read by \code{\link[treeio]{read.raxml}}.
 }
 \usage{
 data(Harpalyce_raxml_tree)

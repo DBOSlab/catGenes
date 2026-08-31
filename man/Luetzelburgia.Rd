@@ -5,7 +5,7 @@
 \alias{Luetzelburgia}
 \title{DNA alignments of the legume genus Luetzelburgia}
 \format{
-DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 }
 \source{
 \url{https://onlinelibrary.wiley.com/doi/10.12705/675.6}

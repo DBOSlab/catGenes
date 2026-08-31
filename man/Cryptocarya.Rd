@@ -5,7 +5,7 @@
 \alias{Cryptocarya}
 \title{DNA alignments of the genus Cryptocarya (Lauraceae)}
 \format{
-DNA sequences in NEXUS format as read by ape's function \code{\link{read.nexus.data}}.
+DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
 }
 \source{
 Moraes, Cardoso, et al. (unpubl. data)

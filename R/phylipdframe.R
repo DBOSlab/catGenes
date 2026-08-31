@@ -3,12 +3,12 @@
 #' @author Domingos Cardoso
 #'
 #' @description Writes \code{data.frame} formatted DNA alignment or \code{list}
-#' formatted NEXUS file as originally imported with \code{\link{ape}}'s function
-#' \code{\link{read.nexus.data}} into a PHYLIP-formatted file. It is useful for
+#' formatted NEXUS file as originally imported with \code{ape}'s function
+#' \code{\link[ape]{read.nexus.data}} into a PHYLIP-formatted file. It is useful for
 #' writing each gene dataset from within the resulting list of compared gene datasets,
 #' after running the concatenating functions \code{\link{catfullGenes}} and
 #' \code{\link{catmultGenes}}. The function is also useful for saving into PHYLIP
-#' format the original list-formatted NEXUS object as read by \code{\link{read.nexus.data}},
+#' format the original list-formatted NEXUS object as read by \code{\link[ape]{read.nexus.data}},
 #' after making specific changes in such original individual alignment (e.g. corrections
 #' of species names).
 #'
@@ -20,7 +20,7 @@
 #' @param x The object to be written, any two-column-sized \code{data.frame} where
 #' the first column contains the taxon names and the second column the DNA sequence.
 #' Otherwise, the object may be a list-formatted NEXUS file as originally
-#' imported with \code{\link{ape}}'s function \code{\link{read.nexus.data}}.
+#' imported with \code{\link{ape}}'s function \code{\link[ape]{read.nexus.data}}.
 #'
 #' @param file Either a character string naming a file or a \code{\link{connection}}
 #'  open for writing.
