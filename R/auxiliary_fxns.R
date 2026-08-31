@@ -190,8 +190,7 @@ equalnumb <- function(x) {
     }
 
     # Clean white space across the gene columns
-    inputdf[, gb.colnames] <- apply(inputdf[, gb.colnames],
-                                    MARGIN = 2, FUN = function(x) gsub("\\s", "", x))
+    inputdf[gb.colnames] <- lapply(inputdf[gb.colnames], function(x) gsub("\\s", "", x))
 
     return(inputdf)
   }

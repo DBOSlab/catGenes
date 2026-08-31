@@ -9,7 +9,8 @@
 #'
 #' @usage
 #' dropSeq(\dots,
-#'         shortaxlabel = FALSE)
+#'         shortaxlabel = FALSE,
+#'         verbose = TRUE)
 #'
 #' @param ... one or a list of NEXUS-formatted gene datasets as loaded by ape's
 #' \code{\link{read.nexus.data}}, for example. You can also load the resulting list
@@ -18,6 +19,9 @@
 #'
 #' @param shortaxlabel Logical, if \code{TRUE} the final individual gene dataset will delete
 #' the accession numbers associated with each species or sequence.
+#'
+#' @param verbose Logical, if \code{FALSE}, a message showing progress during
+#' the removal of duplicated accessions will not be printed in the console.
 #'
 #' @return A list of dataframe(s) containing the input DNA alignment(s), where duplicated
 #' accessions of the same species are removed.
@@ -66,7 +70,8 @@
 #' @export
 
 dropSeq <- function(...,
-                    shortaxlabel = FALSE){
+                    shortaxlabel = FALSE,
+                    verbose = TRUE){
 
   datset <- .namedlist(...)
 

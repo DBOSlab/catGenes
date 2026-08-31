@@ -202,11 +202,6 @@ evomodelTest <- function(nexus_file_path = NULL,
     raw_results_file <- file.path(foldername, paste0(base_name, "_model_test_raw.csv"))
     write.csv(model_test, raw_results_file, row.names = FALSE)
 
-    # Identify best models
-    best_aic <- model_test[which.min(model_test$AIC), ]
-    best_bic <- model_test[which.min(model_test$BIC), ]
-    best_aicc <- model_test[which.min(model_test$AICc), ]
-
     # Calculate AIC and BIC weights
     aic_weights <- exp(-0.5 * (model_test$AIC - min(model_test$AIC)))
     aic_weights <- aic_weights / sum(aic_weights)
@@ -215,6 +210,12 @@ evomodelTest <- function(nexus_file_path = NULL,
     bic_weights <- exp(-0.5 * (model_test$BIC - min(model_test$BIC)))
     bic_weights <- bic_weights / sum(bic_weights)
     model_test$BICw <- bic_weights
+
+    # Identify best models (after AICw/BICw columns are added, so that
+    # best_aic$AICw and best_bic$BICw are populated below)
+    best_aic <- model_test[which.min(model_test$AIC), ]
+    best_bic <- model_test[which.min(model_test$BIC), ]
+    best_aicc <- model_test[which.min(model_test$AICc), ]
 
     # Display results
     cat("\nMODEL SELECTION RESULTS:\n")
