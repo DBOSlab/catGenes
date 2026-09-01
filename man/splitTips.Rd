@@ -4,10 +4,15 @@
 \alias{splitTips}
 \title{Parse tip labels into a dataframe with multiple columns for each content}
 \usage{
-splitTips(tiplabels = NULL)
+splitTips(tiplabels = NULL,
+          file = NULL)
 }
 \arguments{
-\item{tiplabels}{A vector of tip labels from a phylogeny.}
+\item{tiplabels}{A vector of tip labels from a phylogeny. Either
+\code{tiplabels} or \code{file} must be provided.}
+
+\item{file}{Path to a NEXUS, FASTA or PHYLIP alignment file, from which the
+taxon/tip labels will be extracted. Only used when \code{tiplabels = NULL}.}
 }
 \value{
 A dataframe.
@@ -17,7 +22,11 @@ This function is designed to split tip labels into a dataframe
 object. Each column in the dataframe corresponds to the genus, species,
 infraspecific name, and associated voucher and GenBank information, whenever
 available. If doubtful particles such as 'aff.' or 'cf.' are provided, they
-will also be separated into a distinct column.
+will also be separated into a distinct column. When an infraspecific rank
+marker ('var.' or 'subsp.') is present, the epithet that follows it (not
+the marker itself) is captured as the infraspecific name. Tip labels can be
+supplied directly as a vector, or read from a NEXUS, FASTA or PHYLIP
+alignment file.
 }
 \examples{
 \dontrun{
@@ -26,6 +35,8 @@ library(catGenes)
 data(Harpalyce_bayes_tree)
 
 df <- splitTips(tiplabels = Harpalyce_bayes_tree@phylo$tip.label)
+
+df <- splitTips(file = "myalignment.nex")
 }
 
 }

@@ -6,12 +6,21 @@
 #' object. Each column in the dataframe corresponds to the genus, species,
 #' infraspecific name, and associated voucher and GenBank information, whenever
 #' available. If doubtful particles such as 'aff.' or 'cf.' are provided, they
-#' will also be separated into a distinct column.
+#' will also be separated into a distinct column. When an infraspecific rank
+#' marker ('var.' or 'subsp.') is present, the epithet that follows it (not
+#' the marker itself) is captured as the infraspecific name. Tip labels can be
+#' supplied directly as a vector, or read from a NEXUS, FASTA or PHYLIP
+#' alignment file.
 #'
 #' @usage
-#' splitTips(tiplabels = NULL)
+#' splitTips(tiplabels = NULL,
+#'           file = NULL)
 #'
-#' @param tiplabels A vector of tip labels from a phylogeny.
+#' @param tiplabels A vector of tip labels from a phylogeny. Either
+#' \code{tiplabels} or \code{file} must be provided.
+#'
+#' @param file Path to a NEXUS, FASTA or PHYLIP alignment file, from which the
+#' taxon/tip labels will be extracted. Only used when \code{tiplabels = NULL}.
 #'
 #' @return A dataframe.
 #'
@@ -22,15 +31,26 @@
 #' data(Harpalyce_bayes_tree)
 #'
 #' df <- splitTips(tiplabels = Harpalyce_bayes_tree@phylo$tip.label)
+#'
+#' df <- splitTips(file = "myalignment.nex")
 #'}
 #'
 #' @importFrom tibble add_column
 #' @importFrom magrittr %>%
+#' @importFrom ape read.nexus.data read.FASTA
 #'
 #' @export
 #'
 
-splitTips <- function(tiplabels = NULL) {
+splitTips <- function(tiplabels = NULL, file = NULL) {
+
+  if (is.null(tiplabels) && is.null(file)) {
+    stop("Please provide either 'tiplabels' or 'file'.")
+  }
+
+  if (is.null(tiplabels)) {
+    tiplabels <- .read_tiplabels(file)
+  }
 
   if (any(grepl("_", tiplabels))) {
     tiplabels <- gsub("_", " ", tiplabels)
@@ -94,17 +114,27 @@ splitTips <- function(tiplabels = NULL) {
 
   ll <- which(names(df) %in% "species") + 1
 
-  tf <- grepl("^[[:lower:]]+$", df[[ll]])
+  # An explicit infraspecific rank marker (var./subsp.) right after the
+  # species epithet means the *next* term (e.g. "montana" in "Pickeringia
+  # montana var. montana") is the infraspecific name, not the marker itself.
+  rank_marker <- grepl("^(var|subsp)[.]?$", df[[ll]], ignore.case = TRUE)
+
+  tf <- grepl("^[[:lower:]]+$", df[[ll]]) | rank_marker
   if (any(tf)) {
     # Add a new column after the first column
     df <- df %>% tibble::add_column(infrasp = tf, .before = ll)
     # Find rows where the condition is TRUE
     rows_to_shift <- which(df$infrasp)
-    # Loop through each specified row and shift values to the left
+    # Loop through each specified row and shift values to the left, skipping
+    # over the rank marker itself (2 positions) when one is present
     for (i in rows_to_shift) {
       true_index <- which(df[i, ] == TRUE)[1]
-      df[i, (true_index):(ncol(df) - 1)] <- df[i, (true_index + 1):ncol(df)]
-      df[i, ncol(df)] <- NA
+      shift <- if (isTRUE(rank_marker[i])) 2L else 1L
+      last <- ncol(df)
+      if (true_index + shift <= last) {
+        df[i, true_index:(last - shift)] <- df[i, (true_index + shift):last]
+      }
+      df[i, max(true_index, last - shift + 1):last] <- NA
     }
     df$infrasp[which(df$infrasp == FALSE)] <- NA
   }
@@ -131,6 +161,40 @@ splitTips <- function(tiplabels = NULL) {
   df <- df %>% tibble::add_column(tiplabels = tiplabels, .before = "genus")
 
   return(df)
+}
+
+
+#-------------------------------------------------------------------------------
+# Auxiliary function to extract taxon/tip labels from a NEXUS, FASTA or
+# PHYLIP alignment file. Format is sniffed from the first non-empty line,
+# following the same convention used by convertAlign().
+
+.read_tiplabels <- function(file) {
+
+  if (!file.exists(file)) {
+    stop("The file '", file, "' does not exist.")
+  }
+
+  temp <- readLines(file, warn = FALSE)
+  temp <- temp[nzchar(trimws(temp))]
+
+  first_char <- substr(trimws(temp[1]), 1, 1)
+
+  if (first_char == "#") {
+    # NEXUS
+    tiplabels <- names(ape::read.nexus.data(file))
+
+  } else if (first_char == ">") {
+    # FASTA
+    tiplabels <- names(ape::read.FASTA(file))
+
+  } else {
+    # PHYLIP: first line holds the ntax/nchar dimensions
+    temp <- temp[-1]
+    tiplabels <- gsub("\\s.*", "", trimws(temp))
+  }
+
+  return(tiplabels)
 }
 
 
