@@ -1,0 +1,127 @@
+<svg viewBox="0 0 900 1300" xmlns="http://www.w3.org/2000/svg" role="img" font-family="'Helvetica Neue', Arial, sans-serif">
+  <title>catGenes workflow: sequence acquisition through tree visualization</title>
+  <desc>Seven-stage pipeline diagram: sequence acquisition, alignment preparation, taxon subsetting and renaming, dataset assembly, model setup, phylogenetic inference, and tree visualization, each stage listing the relevant catGenes functions.</desc>
+
+  <rect x="0" y="0" width="900" height="1300" fill="#FAF7F7"/>
+
+  <!-- Row 1: SEQUENCE ACQUISITION -->
+  <g>
+    <rect x="24" y="20" width="852" height="150" rx="14" fill="#F4A6AE" fill-opacity="0.16"/>
+    <circle cx="80" cy="95" r="30" fill="#F4A6AE"/>
+    <text x="80" y="104" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">1</text>
+    <text x="80" y="140" text-anchor="middle" font-size="12" font-weight="600" fill="#86293F">ACQUIRE</text>
+
+    <rect x="150" y="38" width="345" height="114" rx="10" fill="#ffffff" stroke="#F4A6AE" stroke-width="1.2"/>
+    <text x="166" y="62" font-size="12.5" font-weight="600" fill="#1A1A1A">Sequence retrieval</text>
+    <text x="166" y="86" font-size="13" font-family="monospace" fill="#B85C63">mineSeq()</text>
+    <text x="166" y="106" font-size="13" font-family="monospace" fill="#B85C63">mineTaxa()</text>
+
+    <rect x="505" y="38" width="345" height="114" rx="10" fill="#ffffff" stroke="#F4A6AE" stroke-width="1.2"/>
+    <text x="521" y="62" font-size="12.5" font-weight="600" fill="#1A1A1A">Targeted locus mining</text>
+    <text x="521" y="86" font-size="13" font-family="monospace" fill="#B85C63">minePlastome()</text>
+    <text x="521" y="106" font-size="13" font-family="monospace" fill="#B85C63">mineMitochondrion()</text>
+  </g>
+
+  <path d="M450 170 L450 192" stroke="#B85C63" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Row 2: ALIGNMENT PREPARATION -->
+  <g>
+    <rect x="24" y="196" width="852" height="150" rx="14" fill="#EE8B96" fill-opacity="0.16"/>
+    <circle cx="80" cy="271" r="30" fill="#EE8B96"/>
+    <text x="80" y="280" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">2</text>
+    <text x="80" y="316" text-anchor="middle" font-size="12" font-weight="600" fill="#86293F">PREPARE</text>
+
+    <rect x="150" y="214" width="700" height="114" rx="10" fill="#ffffff" stroke="#EE8B96" stroke-width="1.2"/>
+    <text x="166" y="238" font-size="12.5" font-weight="600" fill="#1A1A1A">Alignment preparation</text>
+    <text x="166" y="262" font-size="13" font-family="monospace" fill="#B85C63">combineFASTA()</text>
+    <text x="166" y="284" font-size="13" font-family="monospace" fill="#B85C63">alignSeqs()</text>
+    <text x="166" y="306" font-size="13" font-family="monospace" fill="#B85C63">convertAlign()</text>
+    <text x="420" y="262" font-size="13" font-family="monospace" fill="#B85C63">read.nexus.data()</text>
+  </g>
+
+  <path d="M450 346 L450 368" stroke="#B85C63" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Row 3: TAXON SUBSETTING (NEW) -->
+  <g>
+    <rect x="24" y="372" width="852" height="150" rx="14" fill="#E5717F" fill-opacity="0.18"/>
+    <circle cx="80" cy="447" r="30" fill="#E5717F"/>
+    <text x="80" y="456" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">3</text>
+    <text x="80" y="492" text-anchor="middle" font-size="12" font-weight="600" fill="#86293F">SUBSET</text>
+
+    <rect x="150" y="390" width="700" height="114" rx="10" fill="#ffffff" stroke="#E5717F" stroke-width="1.4"/>
+    <text x="166" y="422" font-size="12.5" font-weight="600" fill="#1A1A1A">Fish and rename taxa</text>
+    <text x="166" y="448" font-size="13" font-family="monospace" fill="#B85C63">fishSeqs()</text>
+    <text x="166" y="470" font-size="13" font-family="monospace" fill="#B85C63">renameTaxa()</text>
+    <text x="360" y="470" font-size="11.5" fill="#6B4A4E">keep target taxa, trim gap-only sites, relabel</text>
+  </g>
+
+  <path d="M450 522 L450 544" stroke="#B85C63" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Row 4: DATASET ASSEMBLY -->
+  <g>
+    <rect x="24" y="548" width="852" height="150" rx="14" fill="#D9576A" fill-opacity="0.16"/>
+    <circle cx="80" cy="623" r="30" fill="#D9576A"/>
+    <text x="80" y="632" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">4</text>
+    <text x="80" y="668" text-anchor="middle" font-size="12" font-weight="600" fill="#86293F">ASSEMBLE</text>
+
+    <rect x="150" y="566" width="345" height="114" rx="10" fill="#ffffff" stroke="#D9576A" stroke-width="1.2"/>
+    <text x="166" y="590" font-size="12.5" font-weight="600" fill="#1A1A1A">Concatenation</text>
+    <text x="166" y="614" font-size="13" font-family="monospace" fill="#B85C63">catfullGenes()</text>
+    <text x="166" y="636" font-size="13" font-family="monospace" fill="#B85C63">catmultGenes()</text>
+    <text x="166" y="658" font-size="13" font-family="monospace" fill="#B85C63">dropSeq()</text>
+
+    <rect x="505" y="566" width="345" height="114" rx="10" fill="#ffffff" stroke="#D9576A" stroke-width="1.2"/>
+    <text x="521" y="590" font-size="12.5" font-weight="600" fill="#1A1A1A">Export partitioned data</text>
+    <text x="521" y="614" font-size="13" font-family="monospace" fill="#B85C63">writeNexus()</text>
+    <text x="521" y="636" font-size="13" font-family="monospace" fill="#B85C63">writePhylip()</text>
+  </g>
+
+  <path d="M450 698 L450 720" stroke="#B85C63" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Row 5: MODEL SETUP -->
+  <g>
+    <rect x="24" y="724" width="852" height="150" rx="14" fill="#C24357" fill-opacity="0.16"/>
+    <circle cx="80" cy="799" r="30" fill="#C24357"/>
+    <text x="80" y="808" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">5</text>
+    <text x="80" y="844" text-anchor="middle" font-size="12" font-weight="600" fill="#C24357">MODEL</text>
+
+    <rect x="150" y="742" width="700" height="114" rx="10" fill="#ffffff" stroke="#C24357" stroke-width="1.2"/>
+    <text x="166" y="766" font-size="12.5" font-weight="600" fill="#1A1A1A">Model selection &amp; MrBayes setup</text>
+    <text x="166" y="796" font-size="13" font-family="monospace" fill="#B85C63">evomodelTest()</text>
+    <text x="166" y="818" font-size="13" font-family="monospace" fill="#B85C63">evomodelCmds()</text>
+  </g>
+
+  <path d="M450 874 L450 896" stroke="#B85C63" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Row 6: PHYLOGENETIC INFERENCE -->
+  <g>
+    <rect x="24" y="900" width="852" height="150" rx="14" fill="#A6334A" fill-opacity="0.16"/>
+    <circle cx="80" cy="975" r="30" fill="#A6334A"/>
+    <text x="80" y="984" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">6</text>
+    <text x="80" y="1020" text-anchor="middle" font-size="12" font-weight="600" fill="#86293F">INFER</text>
+
+    <rect x="150" y="918" width="700" height="114" rx="10" fill="#ffffff" stroke="#A6334A" stroke-width="1.2"/>
+    <text x="166" y="942" font-size="12.5" font-weight="600" fill="#1A1A1A">Bayesian inference</text>
+    <text x="166" y="972" font-size="13" font-family="monospace" fill="#B85C63">mrbayesRun()</text>
+  </g>
+
+  <path d="M450 1050 L450 1072" stroke="#B85C63" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Row 7: TREE VISUALIZATION -->
+  <g>
+    <rect x="24" y="1076" width="852" height="150" rx="14" fill="#86293F" fill-opacity="0.16"/>
+    <circle cx="80" cy="1151" r="30" fill="#86293F"/>
+    <text x="80" y="1160" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">7</text>
+    <text x="80" y="1196" text-anchor="middle" font-size="12" font-weight="600" fill="#86293F">VISUALIZE</text>
+
+    <rect x="150" y="1094" width="700" height="114" rx="10" fill="#ffffff" stroke="#86293F" stroke-width="1.2"/>
+    <text x="166" y="1118" font-size="12.5" font-weight="600" fill="#1A1A1A">Tree editing &amp; visualization</text>
+    <text x="166" y="1148" font-size="13" font-family="monospace" fill="#B85C63">plotPhylo()</text>
+  </g>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#B85C63"/>
+    </marker>
+  </defs>
+</svg>

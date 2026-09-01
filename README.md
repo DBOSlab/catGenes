@@ -107,7 +107,7 @@ The diagram below summarizes a typical `catGenes` workflow, from
 sequence retrieval and alignment preparation to concatenation, model
 selection, phylogenetic inference, and tree visualization.
 
-![](inst/figures/catGenes_workflow.jpg)
+![](inst/figures/catGenes_workflow.svg)
 
 *Overview of the main `catGenes` workflow, highlighting sequence
 retrieval, FASTA combination, sequence alignment, alignment conversion,
