@@ -70,41 +70,6 @@ NULL
 
 NULL
 
-#' @name Gaya
-#'
-#' @docType data
-#'
-#' @title DNA alignments of the genus Gaya (Malvaceae)
-#'
-#' @description List of three individual DNA alignments of the neotropical genus
-#' Gaya (Malvaceae), containing nuclear ribossomal (ITS) and plastid (petL-psbE, rpL16) genes.
-#'
-#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
-#'
-#' @source <https://www.ingentaconnect.com/content/aspt/sb/2018/00000043/00000003/art00004;jsessionid=20r008g64rupe.x-ic-live-02>
-#'
-#' @usage data(Gaya)
-
-NULL
-
-#' @name Cryptocarya
-#'
-#' @docType data
-#'
-#' @title DNA alignments of the genus Cryptocarya (Lauraceae)
-#'
-#' @description List of four individual DNA alignments of the pantropical genus
-#' Cryptocarya (Lauraceae), containing the nuclear ribossomal (ITS) and plastid
-#' (matK, psbA, rbcL) genes.
-#'
-#' @format DNA sequences in NEXUS format as read by \code{\link[ape]{read.nexus.data}}.
-#'
-#' @source Moraes, Cardoso, et al. (unpubl. data)
-#'
-#' @usage data(Cryptocarya)
-
-NULL
-
 #' @name Vochysiaceae
 #'
 #' @docType data
