@@ -32,8 +32,7 @@ The package is intended to support reproducible workflows from sequence retrieva
 
 `catGenes` currently includes functions for:
 
-- retrieving DNA sequences from GenBank using accession numbers
-- retrieving DNA sequences from GenBank using taxonomic queries
+- retrieving DNA sequences from GenBank using accession numbers and taxonomic queries
 - mining targeted loci from plastid and mitochondrial genomes
 - combining multiple `FASTA` files into a single file
 - performing automated multiple sequence alignment
