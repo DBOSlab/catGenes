@@ -62,7 +62,7 @@ test_that("mineMitochondrion uses the supplied taxon/voucher in the FASTA header
   expect_true(any(grepl("^>My_taxon_Coll123_", lines)))
 })
 
-test_that("mineMitochondrion keeps the .gb file by default and removes it when rm_gb_files = TRUE", {
+test_that("mineMitochondrion keeps the .gb file by default and removes it when rm.gb.files = TRUE", {
   outdir <- withr::local_tempdir()
 
   testthat::local_mocked_bindings(entrez_fetch = function(...) "FAKE GENBANK RECORD",
@@ -74,7 +74,7 @@ test_that("mineMitochondrion keeps the .gb file by default and removes it when r
   mineMitochondrion(genbank = "NC_000001",
                     CDS = TRUE,
                     genes = "COX1",
-                    rm_gb_files = TRUE,
+                    rm.gb.files = TRUE,
                     verbose = FALSE,
                     dir = outdir)
 

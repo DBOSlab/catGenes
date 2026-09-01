@@ -551,7 +551,7 @@ plotPhylo <- function(tree = NULL,
       support_cat <- cut(
         tree_plot$data$prob_numeric,
         breaks = c(-Inf, 0.70, 0.85, 0.95, 0.99, 1),
-        labels = c("< 0.70", "0.70 - 0.85", "0.86 - 0.95", "0.96 - 0.99", "\u2265 1.0"),
+        labels = c("< 0.70", "0.70 - 0.85", "0.86 - 0.95", "0.96 - 0.99", ">= 1.0"),
         right = FALSE,
         include.lowest = TRUE
       )
@@ -560,7 +560,7 @@ plotPhylo <- function(tree = NULL,
         "0.70 - 0.85" = "#009e73",
         "0.86 - 0.95" = "#e69f00",
         "0.96 - 0.99" = "#0072b2",
-        "\u2265 1.0" = "black"
+        ">= 1.0" = "black"
       )
     } else {
       # For bootstrap values (0-100 scale)

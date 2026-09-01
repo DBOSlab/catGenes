@@ -54,10 +54,10 @@ test_that("mineTaxa cleans taxon names, adds vouchers, and separates plastomes",
                   verbose = FALSE,
                   save = TRUE,
                   dir = outdir,
-                  clean_taxa = TRUE,
-                  add_voucher = TRUE,
-                  plastome_apart = TRUE,
-                  rm_duplicated = TRUE)
+                  clean.taxa = TRUE,
+                  add.voucher = TRUE,
+                  plastome.apart = TRUE,
+                  rm.duplicated = TRUE)
 
   expect_true(all(grepl("^Genus_species1_Cardoso123_", names(out))))
 
@@ -67,7 +67,7 @@ test_that("mineTaxa cleans taxon names, adds vouchers, and separates plastomes",
                         list.files(file.path(foldername, "PLASTOME_GB_FILES")))))
 })
 
-test_that("mineTaxa without add_voucher omits the voucher segment from names", {
+test_that("mineTaxa without add.voucher omits the voucher segment from names", {
   .mineTaxa_mocks()
   outdir <- withr::local_tempdir()
 
@@ -75,14 +75,14 @@ test_that("mineTaxa without add_voucher omits the voucher segment from names", {
                   verbose = FALSE,
                   save = TRUE,
                   dir = outdir,
-                  clean_taxa = TRUE,
-                  add_voucher = FALSE,
-                  plastome_apart = FALSE)
+                  clean.taxa = TRUE,
+                  add.voucher = FALSE,
+                  plastome.apart = FALSE)
 
   expect_true(all(grepl("^Genus_species1_AB", names(out))))
 })
 
-test_that("mineTaxa clean_taxa = FALSE returns the raw FASTA text", {
+test_that("mineTaxa clean.taxa = FALSE returns the raw FASTA text", {
   .mineTaxa_mocks()
   outdir <- withr::local_tempdir()
 
@@ -90,7 +90,7 @@ test_that("mineTaxa clean_taxa = FALSE returns the raw FASTA text", {
                   verbose = FALSE,
                   save = TRUE,
                   dir = outdir,
-                  clean_taxa = FALSE)
+                  clean.taxa = FALSE)
 
   expect_true(is.character(out))
   expect_true(grepl("^>AB111111", out))

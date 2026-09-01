@@ -6,17 +6,17 @@
 #' single FASTA file. It saves the combined sequences to a specified output directory.
 #'
 #' @usage
-#' combineFASTA(input_files = NULL,
-#'              output_file = "combined_sequences.fasta",
+#' combineFASTA(input.files = NULL,
+#'              output.file = "combined_sequences.fasta",
 #'              save = TRUE,
 #'              verbose = TRUE,
 #'              dir = "RESULTS_combineFASTA")
 #'
-#' @param input_files Character vector specifying the paths to FASTA files to be
+#' @param input.files Character vector specifying the paths to FASTA files to be
 #' combined. This parameter is required - users must specify exactly which files
 #' they want to combine.
 #'
-#' @param output_file Character string specifying the name of the output combined
+#' @param output.file Character string specifying the name of the output combined
 #' FASTA file. Default is "combined_sequences.fasta".
 #'
 #' @param save Logical. If \code{TRUE} (default), the combined sequences are saved
@@ -53,17 +53,17 @@
 #' @examples
 #' \dontrun{
 #' # Basic usage: combine specific FASTA files
-#' result <- combineFASTA(input_files = c("file1.fasta", "file2.fasta", "file3.fasta"))
+#' result <- combineFASTA(input.files = c("file1.fasta", "file2.fasta", "file3.fasta"))
 #'
 #' # Combine files with custom output name
 #' result <- combineFASTA(
-#'   input_files = c("data/gene1.fasta", "data/gene2.fasta"),
-#'   output_file = "all_genes.fasta"
+#'   input.files = c("data/gene1.fasta", "data/gene2.fasta"),
+#'   output.file = "all_genes.fasta"
 #' )
 #'
 #' # Return results without saving to disk
 #' result <- combineFASTA(
-#'   input_files = c("temp1.fasta", "temp2.fasta"),
+#'   input.files = c("temp1.fasta", "temp2.fasta"),
 #'   save = FALSE,
 #'   verbose = TRUE
 #' )
@@ -79,23 +79,23 @@
 #'
 #' @export
 #'
-combineFASTA <- function(input_files = NULL,
-                         output_file = "combined_sequences.fasta",
+combineFASTA <- function(input.files = NULL,
+                         output.file = "combined_sequences.fasta",
                          save = TRUE,
                          verbose = TRUE,
                          dir = "RESULTS_combineFASTA") {
 
   # Validate inputs
-  if (is.null(input_files) || length(input_files) == 0) {
-    stop("input_files parameter is required. Please specify which FASTA files to combine.")
+  if (is.null(input.files) || length(input.files) == 0) {
+    stop("input.files parameter is required. Please specify which FASTA files to combine.")
   }
 
-  if (!is.character(input_files)) {
-    stop("input_files must be a character vector of file paths.")
+  if (!is.character(input.files)) {
+    stop("input.files must be a character vector of file paths.")
   }
 
   # Check that all files exist
-  missing_files <- input_files[!file.exists(input_files)]
+  missing_files <- input.files[!file.exists(input.files)]
   if (length(missing_files) > 0) {
     stop("The following files do not exist:\n  ",
          paste(missing_files, collapse = "\n  "))
@@ -110,7 +110,7 @@ combineFASTA <- function(input_files = NULL,
     if (!dir.exists(foldername)) {
       dir.create(foldername, recursive = TRUE)
     }
-    output_path <- file.path(foldername, output_file)
+    output_path <- file.path(foldername, output.file)
   } else {
     output_path <- NULL
     if (verbose) {
@@ -119,8 +119,8 @@ combineFASTA <- function(input_files = NULL,
   }
 
   if (verbose) {
-    message("Processing ", length(input_files), " FASTA file(s):")
-    for (file in input_files) {
+    message("Processing ", length(input.files), " FASTA file(s):")
+    for (file in input.files) {
       message("  - ", basename(file))
     }
     if (save) {
@@ -140,16 +140,18 @@ combineFASTA <- function(input_files = NULL,
   # Read and combine sequences
   total_sequences <- 0
 
-  for (i in seq_along(input_files)) {
-    file <- input_files[i]
+  for (i in seq_along(input.files)) {
+    file <- input.files[i]
 
     if (verbose) {
-      message("\nProcessing: ", basename(file), " (", i, "/", length(input_files), ")")
+      message("\nProcessing: ", basename(file), " (", i, "/", length(input.files), ")")
     }
 
     tryCatch({
       # Read sequences
-      sequences <- ape::read.FASTA(file)
+      sequences <- suppressWarnings(
+        ape::read.FASTA(file)
+      )
 
       if (is.null(sequences) || length(sequences) == 0) {
         if (verbose) {
@@ -222,7 +224,7 @@ combineFASTA <- function(input_files = NULL,
   summary_stats <- data.frame(
     total_files = nrow(file_info),
     total_sequences = length(all_sequences),
-    output_file = ifelse(save, output_file, "Not saved to disk"),
+    output_file = ifelse(save, output.file, "Not saved to disk"),
     stringsAsFactors = FALSE
   )
 

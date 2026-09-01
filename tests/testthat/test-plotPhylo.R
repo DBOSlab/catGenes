@@ -76,28 +76,43 @@ test_that("plotPhylo renders the full documented example (clades, gene labels, s
   outgroup_taxa <- c("Dermatophyllum_secundiflorum", "Clathrotropis_nitida",
                      "Bowdichia_virgilioides")
 
-  p <- plotPhylo(tree = Harpalyce_bayes_tree,
-                 layout = "rectangular",
-                 branch.width = 0.5,
-                 branch.supports = TRUE,
-                 add.raxml.tree = Harpalyce_raxml_tree,
-                 add.parsi.tree = Harpalyce_parsimony_tree,
-                 highlight.clade = Harpalyce_clade,
-                 fill.gradient = "#D53E4F",
-                 show.tip.label = TRUE,
-                 understate.taxa = outgroup_taxa,
-                 gene.label = c("ITS/5.8S", "ETS", "matK", "trnL intron"),
-                 phylogram.side = TRUE,
-                 phylogram.supports = TRUE,
-                 phylogram.height = 25,
-                 save = TRUE,
-                 dir = outdir,
-                 format = "pdf")
+  p <- suppressWarnings(
+    plotPhylo(
+      tree = Harpalyce_bayes_tree,
+      layout = "rectangular",
+      branch.width = 0.5,
+      branch.supports = TRUE,
+      add.raxml.tree = Harpalyce_raxml_tree,
+      add.parsi.tree = Harpalyce_parsimony_tree,
+      highlight.clade = Harpalyce_clade,
+      fill.gradient = "#D53E4F",
+      show.tip.label = TRUE,
+      size.tip.label = 4,
+      fontface.tip.label = "italic",
+      understate.taxa = outgroup_taxa,
+      gene.label = c("ITS/5.8S", "ETS", "matK", "trnL intron"),
+      size.gene.label = 12,
+      ylim.gene.label = NULL,
+      phylogram.side = TRUE,
+      phylogram.supports = TRUE,
+      phylogram.height = 25,
+      save = TRUE,
+      dir = outdir,
+      format = "pdf"
+    )
+  )
 
   expect_s3_class(p, "ggtree")
-  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
-  # save = TRUE with no explicit filename defaults to "edited_tree_<layout>"
-  expect_true(file.exists(file.path(foldername, "edited_tree_rectangular.pdf")))
+
+  foldername <- file.path(
+    outdir,
+    format(Sys.time(), "%d%b%Y")
+  )
+
+  expect_true(
+    file.exists(
+      file.path(foldername, "edited_tree_rectangular.pdf")
+    ))
 })
 
 test_that("plotPhylo replaces taxon names and disables the support legend", {
@@ -170,7 +185,7 @@ test_that("plotPhylo saves to PNG, JPG, and TIFF formats", {
 
   for (fmt in c("png", "jpg", "tiff")) {
     plotPhylo(tree = Harpalyce_bayes_tree, save = TRUE, dir = outdir,
-             filename = paste0("tree_", fmt), format = fmt)
+              filename = paste0("tree_", fmt), format = fmt)
   }
 
   foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
@@ -184,10 +199,10 @@ test_that("plotPhylo saves a file to disk when save = TRUE", {
   outdir <- withr::local_tempdir()
 
   plotPhylo(tree = Harpalyce_bayes_tree,
-           save = TRUE,
-           dir = outdir,
-           filename = "mytree",
-           format = "pdf")
+            save = TRUE,
+            dir = outdir,
+            filename = "mytree",
+            format = "pdf")
 
   foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
   expect_true(file.exists(file.path(foldername, "mytree.pdf")))

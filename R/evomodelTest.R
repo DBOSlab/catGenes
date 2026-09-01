@@ -8,31 +8,31 @@
 #' corresponding MrBayes commands for phylogenetic analysis.
 #'
 #' @usage
-#' evomodelTest(nexus_file_path = NULL,
-#'              model_criteria = "AIC",
-#'              models_to_test = "all",
-#'              include_G = TRUE,
-#'              include_I = TRUE,
+#' evomodelTest(nexus.file.path = NULL,
+#'              model.criteria = "AIC",
+#'              models.to.test = "all",
+#'              include.G = TRUE,
+#'              include.I = TRUE,
 #'              mc.cores = 4,
-#'              append_mrbayes_to_nexus = TRUE,
-#'              overwrite_original_nexus = FALSE,
-#'              combined_nexus_file_path = NULL,
+#'              append.mrbayes.to.nexus = TRUE,
+#'              overwrite.original.nexus = FALSE,
+#'              combined.nexus.file.path = NULL,
 #'              verbose = TRUE,
 #'              dir = "RESULTS_evomodelTest")
 #'
-#' @param nexus_file_path Path to the NEXUS alignment file(s).
-#' @param model_criteria Selection criterion: "AIC" or "BIC" (default: "BIC").
-#' @param models_to_test Which models to test: "all" for all models, "standard"
+#' @param nexus.file.path Path to the NEXUS alignment file(s).
+#' @param model.criteria Selection criterion: "AIC" or "BIC" (default: "BIC").
+#' @param models.to.test Which models to test: "all" for all models, "standard"
 #' for JC/F81/K80/HKY/SYM/GTR only, or a character vector of specific models.
-#' @param include_G Should Gamma rate heterogeneity be tested? (default: TRUE).
-#' @param include_I Should invariant sites be tested? (default: TRUE).
+#' @param include.G Should Gamma rate heterogeneity be tested? (default: TRUE).
+#' @param include.I Should invariant sites be tested? (default: TRUE).
 #' @param mc.cores Number of cores for parallel computation (default: 4).
-#' @param append_mrbayes_to_nexus Logical. If TRUE, appends the generated
+#' @param append.mrbayes.to.nexus Logical. If TRUE, appends the generated
 #' MrBayes block to each input NEXUS matrix.
-#' @param overwrite_original_nexus Logical. If TRUE and
-#' \code{append_mrbayes_to_nexus = TRUE}, the original NEXUS file is overwritten.
+#' @param overwrite.original.nexus Logical. If TRUE and
+#' \code{append.mrbayes.to.nexus = TRUE}, the original NEXUS file is overwritten.
 #' If FALSE, a copy with the same basename is written to the results folder.
-#' @param combined_nexus_file_path Optional path to a concatenated/combined
+#' @param combined.nexus.file.path Optional path to a concatenated/combined
 #' NEXUS matrix. If provided, the function appends the complete combined
 #' MrBayes block for partitioned analysis to that file.
 #' @param verbose Print progress messages? (default: TRUE).
@@ -50,10 +50,10 @@
 #' evomodelTest("alignment.nex")
 #'
 #' # Specify AIC criterion and partition 1
-#' evomodelTest("alignment.nex", model_criteria = "AIC", partition = "1")
+#' evomodelTest("alignment.nex", model.criteria = "AIC", partition = "1")
 #'
 #' # Test only standard models
-#' evomodelTest("alignment.nex", models_to_test = "standard")
+#' evomodelTest("alignment.nex", models.to.test = "standard")
 #' }
 #'
 #' @importFrom tools file_path_sans_ext
@@ -63,32 +63,32 @@
 #'
 #' @export
 #'
-evomodelTest <- function(nexus_file_path = NULL,
-                         model_criteria = "AIC",
-                         models_to_test = "all",
-                         include_G = TRUE,
-                         include_I = TRUE,
+evomodelTest <- function(nexus.file.path = NULL,
+                         model.criteria = "AIC",
+                         models.to.test = "all",
+                         include.G = TRUE,
+                         include.I = TRUE,
                          mc.cores = 4,
-                         append_mrbayes_to_nexus = TRUE,
-                         overwrite_original_nexus = FALSE,
-                         combined_nexus_file_path = NULL,
+                         append.mrbayes.to.nexus = TRUE,
+                         overwrite.original.nexus = FALSE,
+                         combined.nexus.file.path = NULL,
                          verbose = TRUE,
                          dir = "RESULTS_evomodelTest") {
 
-  nexus_files <- sort(list.files(nexus_file_path, full.names = TRUE))
+  nexus_files <- sort(list.files(nexus.file.path, full.names = TRUE))
 
   # Validate inputs
-  if (is.null(nexus_file_path)) {
+  if (is.null(nexus.file.path)) {
     stop("Please provide the path to your NEXUS alignment file(s).")
   }
 
   if (length(nexus_files) == 0) {
-    stop(paste("No files found within the folder:", nexus_file_path))
+    stop(paste("No files found within the folder:", nexus.file.path))
   }
 
-  if (!model_criteria %in% c("AIC", "BIC", "AICc")) {
-    warning("model_criteria should be 'AIC', 'BIC', or 'AICc'. Using 'AIC'.")
-    model_criteria <- "AIC"
+  if (!model.criteria %in% c("AIC", "BIC", "AICc")) {
+    warning("model.criteria should be 'AIC', 'BIC', or 'AICc'. Using 'AIC'.")
+    model.criteria <- "AIC"
   }
 
   # Create results directory structure
@@ -191,9 +191,9 @@ evomodelTest <- function(nexus_file_path = NULL,
 
     model_test <- phangorn::modelTest(
       phy,
-      model = models_to_test,
-      G = include_G,
-      I = include_I,
+      model = models.to.test,
+      G = include.G,
+      I = include.I,
       control = phangorn::pml.control(trace = 0),
       multicore = (mc.cores > 1),
       mc.cores = mc.cores
@@ -286,10 +286,10 @@ evomodelTest <- function(nexus_file_path = NULL,
     cat(rep("-", 50), "\n", sep = "")
 
     # Generate commands for best model by selected criterion
-    if (model_criteria == "AIC") {
+    if (model.criteria == "AIC") {
       selected_model <- best_aic$Model
       cat("Using best AIC model:", selected_model, "\n\n")
-    } else if (model_criteria == "BIC") {
+    } else if (model.criteria == "BIC") {
       selected_model <- best_bic$Model
       cat("Using best BIC model:", selected_model, "\n\n")
     } else {
@@ -303,11 +303,11 @@ evomodelTest <- function(nexus_file_path = NULL,
     model_vector_single <- selected_model
 
     # Generate commands using evomodelCmds
-    mrbayes_commands <- evomodelCmds(model_vector = model_vector_single)
+    mrbayes_commands <- evomodelCmds(model.vector = model_vector_single)
 
     nexus_with_block_file <- NULL
 
-    if (append_mrbayes_to_nexus) {
+    if (append.mrbayes.to.nexus) {
 
       original_lines <- readLines(nexus_files[l], warn = FALSE)
 
@@ -321,12 +321,12 @@ evomodelTest <- function(nexus_file_path = NULL,
 
         block_lines <- .build_mrbayes_block(
           selected_model = selected_model,
-          model_criteria = model_criteria,
+          model.criteria = model.criteria,
           mrbayes_commands = mrbayes_commands,
           alignment_name = base_name
         )
 
-        nexus_with_block_file <- if (overwrite_original_nexus) {
+        nexus_with_block_file <- if (overwrite.original.nexus) {
           nexus_files[l]
         } else {
           file.path(foldername, basename(nexus_files[l]))
@@ -361,7 +361,7 @@ evomodelTest <- function(nexus_file_path = NULL,
     cat("  # MODEL SETTINGS (from evomodelTest)\n")
     cat("  # ================================================\n")
     cat("  [ Selected model: ", selected_model, "]\n", sep = "")
-    cat("  [ Selection criterion: ", model_criteria, "]\n", sep = "")
+    cat("  [ Selection criterion: ", model.criteria, "]\n", sep = "")
 
     # Use the commands from evomodelCmds - they're already optimized
     # For single partition, evomodelCmds creates commands like "applyto=(1)"
@@ -399,7 +399,7 @@ evomodelTest <- function(nexus_file_path = NULL,
       cat(rep("-", 40), "\n", sep = "")
       for (criterion in names(other_models)) {
         if (other_models[[criterion]] != selected_model) {
-          alt_commands <- evomodelCmds(model_vector = other_models[[criterion]])
+          alt_commands <- evomodelCmds(model.vector = other_models[[criterion]])
           cat("# ", criterion, ": ", other_models[[criterion]], "\n", sep = "")
           cat("# lset:", alt_commands$lset_cmd[1], "\n")
           cat("# prset:", alt_commands$prset_cmd[1], "\n\n")
@@ -428,7 +428,7 @@ evomodelTest <- function(nexus_file_path = NULL,
       ),
       settings = list(
         nexus_file = basename(nexus_files[l]),
-        criteria = model_criteria,
+        criteria = model.criteria,
         timestamp = timestamp
       )
     )
@@ -438,7 +438,7 @@ evomodelTest <- function(nexus_file_path = NULL,
     if (verbose) {
       message("[", format(Sys.time(), "%H:%M:%S"), "] Analysis complete for: ",
               basename(nexus_files[l]), sep = "")
-      message("  Best model (by ", model_criteria, "): ", selected_model, sep = "")
+      message("  Best model (by ", model.criteria, "): ", selected_model, sep = "")
       message("  Results saved to: ", output_file, "\n", sep = "")
     }
   } # End of for loop
@@ -449,18 +449,18 @@ evomodelTest <- function(nexus_file_path = NULL,
   if (length(selected_models) > 1) {
 
     # Generate optimized commands for all partitions together
-    combined_mrbayes_commands <- evomodelCmds(model_vector = selected_models)
+    combined_mrbayes_commands <- evomodelCmds(model.vector = selected_models)
 
 
     combined_nexus_with_block_file <- NULL
 
-    if (!is.null(combined_nexus_file_path)) {
+    if (!is.null(combined.nexus.file.path)) {
 
-      if (!file.exists(combined_nexus_file_path)) {
-        warning("The combined NEXUS file does not exist: ", combined_nexus_file_path)
+      if (!file.exists(combined.nexus.file.path)) {
+        warning("The combined NEXUS file does not exist: ", combined.nexus.file.path)
       } else {
 
-        combined_original_lines <- readLines(combined_nexus_file_path, warn = FALSE)
+        combined_original_lines <- readLines(combined.nexus.file.path, warn = FALSE)
 
         has_mrbayes_block <- any(
           grepl("^\\s*begin\\s+mrbayes\\s*;", combined_original_lines, ignore.case = TRUE)
@@ -468,7 +468,7 @@ evomodelTest <- function(nexus_file_path = NULL,
 
         if (has_mrbayes_block) {
           warning("Combined NEXUS file already contains a MrBayes block: ",
-                  basename(combined_nexus_file_path))
+                  basename(combined.nexus.file.path))
         } else {
 
           combined_block_lines <- .build_combined_mrbayes_block(
@@ -479,10 +479,10 @@ evomodelTest <- function(nexus_file_path = NULL,
             combined_prefix = "comb_Bayesian"
           )
 
-          combined_nexus_with_block_file <- if (overwrite_original_nexus) {
-            combined_nexus_file_path
+          combined_nexus_with_block_file <- if (overwrite.original.nexus) {
+            combined.nexus.file.path
           } else {
-            file.path(foldername, basename(combined_nexus_file_path))
+            file.path(foldername, basename(combined.nexus.file.path))
           }
 
           writeLines(
@@ -514,7 +514,7 @@ evomodelTest <- function(nexus_file_path = NULL,
     cat("ANALYSIS SUMMARY\n")
     cat(rep("-", 50), "\n", sep = "")
     cat("Total partitions: ", length(nexus_files), "\n", sep = "")
-    cat("Model selection criterion: ", model_criteria, "\n", sep = "")
+    cat("Model selection criterion: ", model.criteria, "\n", sep = "")
     cat("Analysis date: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n", sep = "")
     cat("Directory: ", foldername, "\n\n", sep = "")
 
@@ -646,7 +646,7 @@ evomodelTest <- function(nexus_file_path = NULL,
 
 
 .build_mrbayes_block <- function(selected_model,
-                                 model_criteria,
+                                 model.criteria,
                                  mrbayes_commands,
                                  alignment_name) {
 
@@ -665,7 +665,7 @@ evomodelTest <- function(nexus_file_path = NULL,
     "  [ MODEL SETTINGS (from evomodelTest)               ]",
     "  [ ================================================ ]",
     paste0("  [ Selected model: ", selected_model, " ]"),
-    paste0("  [ Selection criterion: ", model_criteria, " ]"),
+    paste0("  [ Selection criterion: ", model.criteria, " ]"),
     paste0("  ", cmd_lines),
     "",
     "  [ ================================================ ]",
@@ -763,7 +763,7 @@ evomodelTest <- function(nexus_file_path = NULL,
 
 #' Convert model names into efficient MrBayes commands
 #'
-#' @param model_vector A character vector of model names where the position/index
+#' @param model.vector A character vector of model names where the position/index
 #'        corresponds to the MrBayes partition number (e.g., `c("GTR+G+I", "HKY+G", "GTR+G+I")`).
 #'        Partition 1 gets the first model, Partition 2 the second, etc.
 #'
@@ -777,16 +777,16 @@ evomodelTest <- function(nexus_file_path = NULL,
 #' @examples
 #' # Partitions 1 and 3 share the same model, partition 2 is different
 #' models <- c("GTR+G(4)+I", "HKY+G(4)", "GTR+G(4)+I")
-#' cmds <- evomodelCmds(model_vector = models)
+#' cmds <- evomodelCmds(model.vector = models)
 #' cat(cmds$all_commands, sep = "\n")
 #'
 #' @export
 #'
-evomodelCmds <- function(model_vector) {
+evomodelCmds <- function(model.vector) {
 
   # Input validation
-  if (!is.character(model_vector) || length(model_vector) == 0) {
-    stop("'model_vector' must be a non-empty character vector.")
+  if (!is.character(model.vector) || length(model.vector) == 0) {
+    stop("'model.vector' must be a non-empty character vector.")
   }
 
   # Helper function: Parse a single model (same as before)
@@ -863,12 +863,12 @@ evomodelCmds <- function(model_vector) {
   }
 
   # Step 1: Parse all models
-  parsed_list <- lapply(model_vector, .parse_single_model)
+  parsed_list <- lapply(model.vector, .parse_single_model)
 
   # Create data frame with partition numbers as positions
   df <- data.frame(
-    partition = seq_along(model_vector),  # Position = partition number
-    model = model_vector,
+    partition = seq_along(model.vector),  # Position = partition number
+    model = model.vector,
     nst = sapply(parsed_list, function(x) x$nst),
     rates = sapply(parsed_list, function(x) x$rates),
     revmatpr = sapply(parsed_list, function(x) x$revmatpr),
@@ -909,13 +909,13 @@ evomodelCmds <- function(model_vector) {
   # Create clean command vector
   all_cmds <- c(
     "# Model settings from partitioned analysis",
-    paste0("# Generated for ", length(model_vector), " partition(s)"),
+    paste0("# Generated for ", length(model.vector), " partition(s)"),
     grouped_df$lset_cmd,
     grouped_df$prset_cmd
   )
 
   # Create a partition map for reference
-  partition_map <- setNames(model_vector, seq_along(model_vector))
+  partition_map <- setNames(model.vector, seq_along(model.vector))
 
   return(list(
     grouped_commands = grouped_df,

@@ -15,7 +15,7 @@
 #'              voucher = NULL,
 #'              CDS = TRUE,
 #'              genes = NULL,
-#'              rm_gb_files = FALSE,
+#'              rm.gb.files = FALSE,
 #'              verbose = TRUE,
 #'              dir = "RESULTS_minePlastome")
 #'
@@ -37,7 +37,7 @@
 #'
 #' @param genes A vector of one or more gene names as annotated in GenBank.
 #'
-#' @param rm_gb_files Logical, if \code{TRUE}, the downloaded .gb files from
+#' @param rm.gb.files Logical, if \code{TRUE}, the downloaded .gb files from
 #' GenBank will be removed from the directory after extracting the targeted loci.
 #' The default is \code{FALSE}, keeping the original .gb files.
 #'
@@ -65,7 +65,7 @@
 #'              voucher = GenBank_plastomes$Voucher,
 #'              CDS = TRUE,
 #'              genes = c("matK", "rbcL"),
-#'              rm_gb_files = FALSE,
+#'              rm.gb.files = FALSE,
 #'              verbose = TRUE,
 #'              dir = "RESULTS_minePlastome")
 #'}
@@ -81,7 +81,7 @@ minePlastome <- function(genbank = NULL,
                          voucher = NULL,
                          CDS = TRUE,
                          genes = NULL,
-                         rm_gb_files = FALSE,
+                         rm.gb.files = FALSE,
                          verbose = TRUE,
                          dir = "RESULTS_minePlastome") {
 
@@ -187,8 +187,8 @@ minePlastome <- function(genbank = NULL,
         }
       }
 
-      # Remove .gb files if rm_gb_files is TRUE
-      if (rm_gb_files) {
+      # Remove .gb files if rm.gb.files is TRUE
+      if (rm.gb.files) {
         file.remove(file_path)
         if (verbose) {
           message("Removed .gb file: ", filename)
@@ -200,10 +200,10 @@ minePlastome <- function(genbank = NULL,
   }
 
   # Final message about file removal
-  if (rm_gb_files && verbose) {
+  if (rm.gb.files && verbose) {
     message("\nAll .gb files have been removed from directory.")
     message("Only extracted loci in FASTA format are kept.")
-  } else if (!rm_gb_files && verbose) {
+  } else if (!rm.gb.files && verbose) {
     message("\nAll .gb files are kept in directory for reference.")
   }
 

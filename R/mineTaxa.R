@@ -13,11 +13,11 @@
 #' mineTaxa(term = NULL,
 #'          db = "nucleotide",
 #'          filename = "mined_seqs_by_taxon.fasta",
-#'          clean_taxa = TRUE,
-#'          add_voucher = TRUE,
-#'          original_query = FALSE,
-#'          plastome_apart = TRUE,
-#'          rm_duplicated = TRUE,
+#'          clean.taxa = TRUE,
+#'          add.voucher = TRUE,
+#'          original.query = FALSE,
+#'          plastome.apart = TRUE,
+#'          rm.duplicated = TRUE,
 #'          retmax = 4000,
 #'          verbose = TRUE,
 #'          save = TRUE,
@@ -35,23 +35,23 @@
 #' @param filename Character string for the output FASTA file name.
 #' Default is "mined_seqs_by_taxon.fasta".
 #'
-#' @param clean_taxa Logical. If \code{TRUE} (default), taxon names are cleaned
+#' @param clean.taxa Logical. If \code{TRUE} (default), taxon names are cleaned
 #' and standardized (removes authors, subsp./var. indicators, special characters).
 #' If \code{FALSE}, original GenBank names are preserved.
 #'
-#' @param add_voucher Logical. If \code{TRUE} (default), voucher specimen information
+#' @param add.voucher Logical. If \code{TRUE} (default), voucher specimen information
 #' (when available) is extracted and appended to sequence names in the format:
 #' Genus_species_voucher_accession. If \code{FALSE}, voucher information is omitted.
 #'
-#' @param original_query Logical. If \code{TRUE}, a copy of the original unprocessed
-#' FASTA file is saved with "_ORIGINAL_QUERY" suffix. If \code{FALSE} (default),
-#' only the cleaned file is kept. Ignored if \code{clean_taxa = FALSE}.
+#' @param original.query Logical. If \code{TRUE}, a copy of the original unprocessed
+#' FASTA file is saved with "_original.query" suffix. If \code{FALSE} (default),
+#' only the cleaned file is kept. Ignored if \code{clean.taxa = FALSE}.
 #'
-#' @param plastome_apart Logical. If \code{TRUE} (default), complete plastome sequences
+#' @param plastome.apart Logical. If \code{TRUE} (default), complete plastome sequences
 #' are separated into a separate file with "PLASTOMES_" prefix. Useful for
 #' distinguishing whole plastomes from individual gene sequences.
 #'
-#' @param rm_duplicated Logical. If \code{TRUE} (default), removes duplicate sequences
+#' @param rm.duplicated Logical. If \code{TRUE} (default), removes duplicate sequences
 #' from the same species, keeping only the longest sequence. Applied separately
 #' to plastomes and other sequences.
 #'
@@ -70,8 +70,8 @@
 #' within this directory.
 #'
 #' @return If \code{save = TRUE}, returns an invisible list of DNA sequences in
-#' \code{DNAbin} format (if \code{clean_taxa = TRUE}) or raw FASTA text (if
-#' \code{clean_taxa = FALSE}). If \code{save = FALSE}, returns the processed
+#' \code{DNAbin} format (if \code{clean.taxa = TRUE}) or raw FASTA text (if
+#' \code{clean.taxa = FALSE}). If \code{save = FALSE}, returns the processed
 #' sequences as an R object. Files are written to disk in either case when
 #' \code{save = TRUE}.
 #'
@@ -80,13 +80,13 @@
 #' \enumerate{
 #'   \item Connects to GenBank using the specified search term
 #'   \item Downloads sequences (up to \code{retmax} records)
-#'   \item If \code{clean_taxa = TRUE}:
+#'   \item If \code{clean.taxa = TRUE}:
 #'   \itemize{
 #'     \item Extracts and cleans organism names from each accession
 #'     \item Optionally adds voucher information
 #'     \item Standardizes naming format: Genus_species_voucher_accession
-#'     \item Separates plastomes if \code{plastome_apart = TRUE}
-#'     \item Removes duplicates if \code{rm_duplicated = TRUE}
+#'     \item Separates plastomes if \code{plastome.apart = TRUE}
+#'     \item Removes duplicates if \code{rm.duplicated = TRUE}
 #'   }
 #'   \item Saves results to specified directory with date-stamped subfolder
 #' }
@@ -121,11 +121,11 @@
 #' result2 <- mineTaxa(
 #'   term = "Fabaceae[Organism] AND rbcL[Gene]",
 #'   filename = "Fabaceae_rbcL.fasta",
-#'   clean_taxa = TRUE,
-#'   add_voucher = FALSE,          # Don't add voucher info
-#'   original_query = TRUE,        # Keep original unprocessed file
-#'   plastome_apart = FALSE,       # Don't separate plastomes
-#'   rm_duplicated = FALSE,        # Keep all sequences
+#'   clean.taxa = TRUE,
+#'   add.voucher = FALSE,          # Don't add voucher info
+#'   original.query = TRUE,        # Keep original unprocessed file
+#'   plastome.apart = FALSE,       # Don't separate plastomes
+#'   rm.duplicated = FALSE,        # Keep all sequences
 #'   retmax = 1000,
 #'   verbose = TRUE
 #' )
@@ -135,7 +135,7 @@
 #'   term = "Rubisco[Protein] AND plants[Organism]",
 #'   db = "protein",
 #'   filename = "plant_Rubisco.fasta",
-#'   clean_taxa = FALSE           # Don't clean names for proteins
+#'   clean.taxa = FALSE           # Don't clean names for proteins
 #' )
 #'
 #' # Example 4: Return results without saving to disk
@@ -162,11 +162,11 @@
 mineTaxa <- function(term = NULL,
                      db = "nucleotide",
                      filename = "mined_seqs_by_taxon.fasta",
-                     clean_taxa = TRUE,
-                     add_voucher = TRUE,
-                     original_query = FALSE,
-                     plastome_apart = TRUE,
-                     rm_duplicated = TRUE,
+                     clean.taxa = TRUE,
+                     add.voucher = TRUE,
+                     original.query = FALSE,
+                     plastome.apart = TRUE,
+                     rm.duplicated = TRUE,
                      retmax = 4000,
                      verbose = TRUE,
                      save = TRUE,
@@ -232,7 +232,7 @@ mineTaxa <- function(term = NULL,
   }
 
   # Process sequences if cleaning is requested
-  if (clean_taxa) {
+  if (clean.taxa) {
 
     if (verbose) {
       message("Processing and cleaning taxon names...")
@@ -261,7 +261,7 @@ mineTaxa <- function(term = NULL,
       }
 
       # Replace original taxon names by the cleaned names + accessions
-      if (add_voucher) {
+      if (add.voucher) {
         if (metadata[[i]]$voucher != "Unvouchered" && verbose) {
           message(paste0("Voucher '", metadata[[i]]$voucher, "' added!"))
         }
@@ -275,13 +275,13 @@ mineTaxa <- function(term = NULL,
     }
 
     # Handle original query file
-    if (original_query && save) {
+    if (original.query && save) {
       file.copy(from = paste0(foldername, "/", filename),
-                to = gsub("[.]fasta", "_ORIGINAL_QUERY.fasta",
+                to = gsub("[.]fasta", "_original_query.fasta",
                           paste0(foldername, "/", filename)))
       if (verbose) {
         message("Original query saved as: ",
-                gsub("[.]fasta", "_ORIGINAL_QUERY.fasta", filename))
+                gsub("[.]fasta", "_original_query.fasta", filename))
       }
     } else if (save) {
       unlink(paste0(foldername, "/", filename))
@@ -292,7 +292,7 @@ mineTaxa <- function(term = NULL,
       fasta_query_temp <- fasta_query
 
       # Separate plastomes if requested
-      if (plastome_apart) {
+      if (plastome.apart) {
         tf <- grepl("complete genome", full_labels, ignore.case = TRUE)
         if (any(tf)) {
           temp <- names(fasta_query_temp)[tf]
@@ -300,7 +300,7 @@ mineTaxa <- function(term = NULL,
           fasta_query_temp <- fasta_query_temp[!names(fasta_query_temp) %in% temp]
 
           # Remove duplicate plastomes if requested
-          if (rm_duplicated && length(plastomes) > 0) {
+          if (rm.duplicated && length(plastomes) > 0) {
             plastomes <- .rm_duplicated_seqs(plastomes)
             if (verbose) {
               message(paste0(length(plastomes),
@@ -388,7 +388,7 @@ mineTaxa <- function(term = NULL,
       }
 
       # Remove duplicate sequences if requested
-      if (rm_duplicated && length(fasta_query_temp) > 0) {
+      if (rm.duplicated && length(fasta_query_temp) > 0) {
         original_count <- length(fasta_query_temp)
         fasta_query_temp <- .rm_duplicated_seqs(fasta_query_temp)
         removed_count <- original_count - length(fasta_query_temp)

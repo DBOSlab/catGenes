@@ -43,27 +43,6 @@
 
 
 #_______________________________________________________________________________
-# Auxiliary function to obtain the intersection of a list of vectors ####
-# Used inside the function delGaps
-
-.intersectAll <- function(...) {
-  args <- list(...)
-  nargs <- length(args[[1]])
-  if (nargs <= 1) {
-    if (nargs == 1 && is.list(unlist(args[[1]][[1]]))) {
-      do.call("intersectAll", unlist(args[[1]][[1]]))
-    } else {
-      stop("Cannot evaluate intersection fewer than 2 arguments")
-    }
-  } else if (nargs == 2) {
-    intersect(unlist(args[[1]][[1]]), unlist(args[[1]][[2]]))
-  } else {
-    intersect(unlist(args[[1]][[1]]), .intersectAll(args[[1]][-1]))
-  }
-}
-
-
-#_______________________________________________________________________________
 # Auxiliary function for returning TRUE if all values are equal and FALSE ####
 # if it contains different values.
 # Used inside the function dropSeq
@@ -684,3 +663,60 @@ equalnumb <- function(x) {
   return(x)
 }
 
+
+#_______________________________________________________________________________
+# Auxiliary function to delete gap-only columns ####
+# Used inside the functions catfullGenes and catmultGenes
+
+.delGaps <- function(x) {
+
+  dgaps <- list()
+  dgaps_temp <- list()
+
+  for (j in seq_along(x)) {
+    temp <- list()
+    for (i in seq_along(x[[j]][["sequence"]])) {
+      temp[[i]] <-  which(grepl("-", strsplit(x[[j]][["sequence"]], "")[[i]]) == T)
+    }
+    dgaps_temp[[j]] <- temp
+
+    # List of all columns to be removed
+    dgaps[[j]] <- .intersectAll(dgaps_temp[[j]])
+  }
+
+  # Removing all gap-only columns
+  for (j in seq_along(x)) {
+    if (length(dgaps[[j]]) != 0) {
+
+      for (i in seq_along(x[[j]][["sequence"]])) {
+
+        s <- strsplit(x[[j]][["sequence"]], "")[[i]][-dgaps[[j]]]
+
+        x[[j]][["sequence"]][i] <- paste(s, collapse = "")
+      }
+    }
+  }
+
+  return(x)
+}
+
+
+#_______________________________________________________________________________
+# Auxiliary function to obtain the intersection of a list of vectors ####
+# Used inside the function delGaps
+
+.intersectAll <- function(...) {
+  args <- list(...)
+  nargs <- length(args[[1]])
+  if (nargs <= 1) {
+    if (nargs == 1 && is.list(unlist(args[[1]][[1]]))) {
+      do.call("intersectAll", unlist(args[[1]][[1]]))
+    } else {
+      stop("Cannot evaluate intersection fewer than 2 arguments")
+    }
+  } else if (nargs == 2) {
+    intersect(unlist(args[[1]][[1]]), unlist(args[[1]][[2]]))
+  } else {
+    intersect(unlist(args[[1]][[1]]), .intersectAll(args[[1]][-1]))
+  }
+}

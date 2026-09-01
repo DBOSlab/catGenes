@@ -49,7 +49,7 @@
 
 test_that("evomodelTest errors when no NEXUS files are found", {
   empty_dir <- withr::local_tempdir()
-  expect_error(evomodelTest(nexus_file_path = empty_dir), "No files found")
+  expect_error(evomodelTest(nexus.file.path = empty_dir), "No files found")
 })
 
 test_that("evomodelTest selects the best model by AIC and writes a report", {
@@ -58,9 +58,9 @@ test_that("evomodelTest selects the best model by AIC and writes a report", {
   outdir <- withr::local_tempdir()
   .make_nex_file(indir, "geneA.nex")
 
-  res <- evomodelTest(nexus_file_path = indir,
-                      model_criteria = "AIC",
-                      append_mrbayes_to_nexus = FALSE,
+  res <- evomodelTest(nexus.file.path = indir,
+                      model.criteria = "AIC",
+                      append.mrbayes.to.nexus = FALSE,
                       verbose = FALSE,
                       dir = outdir)
 
@@ -76,9 +76,9 @@ test_that("evomodelTest falls back to AIC with a warning for an invalid criterio
   .make_nex_file(indir, "geneA.nex")
 
   expect_warning(
-    res <- evomodelTest(nexus_file_path = indir,
-                        model_criteria = "bogus",
-                        append_mrbayes_to_nexus = FALSE,
+    res <- evomodelTest(nexus.file.path = indir,
+                        model.criteria = "bogus",
+                        append.mrbayes.to.nexus = FALSE,
                         verbose = FALSE,
                         dir = outdir),
     "should be"
@@ -92,9 +92,9 @@ test_that("evomodelTest appends a MrBayes block to a copy of the NEXUS file", {
   outdir <- withr::local_tempdir()
   .make_nex_file(indir, "geneA.nex")
 
-  res <- evomodelTest(nexus_file_path = indir,
-                      append_mrbayes_to_nexus = TRUE,
-                      overwrite_original_nexus = FALSE,
+  res <- evomodelTest(nexus.file.path = indir,
+                      append.mrbayes.to.nexus = TRUE,
+                      overwrite.original.nexus = FALSE,
                       verbose = FALSE,
                       dir = outdir)
 
@@ -110,8 +110,8 @@ test_that("evomodelTest with multiple partitions writes a combined MrBayes block
   .make_nex_file(indir, "geneA.nex")
   .make_nex_file(indir, "geneB.nex")
 
-  res <- evomodelTest(nexus_file_path = indir,
-                      append_mrbayes_to_nexus = FALSE,
+  res <- evomodelTest(nexus.file.path = indir,
+                      append.mrbayes.to.nexus = FALSE,
                       verbose = FALSE,
                       dir = outdir)
 

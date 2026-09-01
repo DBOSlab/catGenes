@@ -18,6 +18,6 @@ Invisibly returns \code{TRUE} if a stop signal was sent, otherwise \code{FALSE}.
 \description{
 Convenience wrapper to stop a MrBayes run returned by \code{\link{mrbayesRun}}.
 For programmatic stopping, the run must have been started with \pkg{processx}
-(i.e., \code{use_processx = TRUE}) and, for practical "stop anytime" control,
+(i.e., \code{use.processx = TRUE}) and, for practical "stop anytime" control,
 \code{background = TRUE}.
 }

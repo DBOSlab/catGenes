@@ -15,24 +15,33 @@
   nex
 }
 
-test_that("mrbayesRun errors when nexus_file does not exist", {
-  expect_error(mrbayesRun("does_not_exist.nex", mrbayes_dir = "."), "does not exist")
+test_that("mrbayesRun errors when nexus.file does not exist", {
+  expect_error(mrbayesRun("does_not_exist.nex",
+                          mrbayes.dir = "."), "does not exist")
 })
 
-test_that("mrbayesRun errors when mrbayes_dir does not exist", {
+test_that("mrbayesRun errors when mrbayes.dir does not exist", {
   nex <- .make_fake_nexus(environment())
-  expect_error(mrbayesRun(nex, mrbayes_dir = "no_such_dir_xyz"), "does not exist")
+  expect_error(mrbayesRun(nex,
+                          mrbayes.dir = "no_such_dir_xyz"), "does not exist")
 })
 
 test_that("mrbayesRun errors when the mb executable is not found", {
   nex <- .make_fake_nexus(environment())
   empty_dir <- withr::local_tempdir()
-  expect_error(mrbayesRun(nex, mrbayes_dir = empty_dir), "executable not found")
+  expect_error(mrbayesRun(nex,
+                          mrbayes.dir = empty_dir), "executable not found")
 })
 
-test_that("mrbayesRun errors on invalid copy_mode", {
-  expect_error(mrbayesRun("x.nex", mrbayes_dir = ".", copy_mode = "bogus"),
-              "copy_mode must be")
+test_that("mrbayesRun errors on invalid copy.mode", {
+  expect_error(
+    mrbayesRun(
+      "x.nex",
+      mrbayes.dir = ".",
+      copy.mode = "bogus"
+    ),
+    "copy\\.mode must be 'copy' or 'move'\\."
+  )
 })
 
 test_that("mrbayesRun runs via the base-R system2 fallback and copies the nexus file", {
@@ -43,9 +52,9 @@ test_that("mrbayesRun runs via the base-R system2 fallback and copies the nexus 
   testthat::local_mocked_bindings(system2 = function(...) 0L, .package = "base")
 
   res <- mrbayesRun(nex,
-                    mrbayes_dir = mrbayes_dir,
-                    run_dir = run_dir,
-                    use_processx = FALSE,
+                    mrbayes.dir = mrbayes_dir,
+                    run.dir = run_dir,
+                    use.processx = FALSE,
                     quiet = TRUE,
                     live = FALSE)
 
@@ -62,10 +71,10 @@ test_that("mrbayesRun copy_mode = 'move' removes the source nexus file", {
   testthat::local_mocked_bindings(system2 = function(...) 0L, .package = "base")
 
   res <- mrbayesRun(nex,
-                    mrbayes_dir = mrbayes_dir,
-                    run_dir = run_dir,
-                    copy_mode = "move",
-                    use_processx = FALSE,
+                    mrbayes.dir = mrbayes_dir,
+                    run.dir = run_dir,
+                    copy.mode = "move",
+                    use.processx = FALSE,
                     quiet = TRUE,
                     live = FALSE)
 
@@ -103,9 +112,9 @@ test_that("mrbayesRun runs via processx in the foreground and returns a stop han
   testthat::local_mocked_bindings(process = .fake_process_generator, .package = "processx")
 
   res <- mrbayesRun(nex,
-                    mrbayes_dir = mrbayes_dir,
-                    run_dir = run_dir,
-                    use_processx = TRUE,
+                    mrbayes.dir = mrbayes_dir,
+                    run.dir = run_dir,
+                    use.processx = TRUE,
                     quiet = TRUE,
                     live = FALSE,
                     background = FALSE)
@@ -123,9 +132,9 @@ test_that("mrbayesRun background = TRUE returns immediately with poll/stop handl
   testthat::local_mocked_bindings(process = .fake_process_generator, .package = "processx")
 
   res <- mrbayesRun(nex,
-                    mrbayes_dir = mrbayes_dir,
-                    run_dir = run_dir,
-                    use_processx = TRUE,
+                    mrbayes.dir = mrbayes_dir,
+                    run.dir = run_dir,
+                    use.processx = TRUE,
                     quiet = TRUE,
                     live = FALSE,
                     background = TRUE)

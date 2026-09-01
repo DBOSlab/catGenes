@@ -9,7 +9,7 @@
 #' command block. The function copies (or moves) the NEXUS file to a dedicated run
 #' directory, launches MrBayes, and captures the program output.
 #'
-#' When \pkg{processx} is installed and \code{use_processx = TRUE}, output can be
+#' When \pkg{processx} is installed and \code{use.processx = TRUE}, output can be
 #' streamed live to the R console and the returned object includes a \code{stop()}
 #' handle that can terminate the run programmatically. Programmatic stopping is
 #' only useful when \code{background = TRUE}, because in foreground mode the call
@@ -22,7 +22,7 @@
 #' Output capture:
 #' - \code{stdout}: file path where standard output is recorded.
 #' - \code{stderr}: file path where errors/warnings are recorded.
-#' The function runs MrBayes in \code{run_dir}, so all MrBayes output files
+#' The function runs MrBayes in \code{run.dir}, so all MrBayes output files
 #' (e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
 #'
 #' Stopping the run:
@@ -31,36 +31,36 @@
 #' - Without \pkg{processx}: stop interactively (Esc in RStudio).
 #'
 #' @usage
-#' mrbayesRun(nexus_file,
-#'            mrbayes_dir,
-#'            run_dir = NULL,
-#'            copy_mode = "copy",
+#' mrbayesRun(nexus.file,
+#'            mrbayes.dir,
+#'            run.dir = NULL,
+#'            copy.mode = "copy",
 #'            quiet = FALSE,
 #'            live = TRUE,
-#'            use_processx = TRUE,
+#'            use.processx = TRUE,
 #'            background = FALSE)
 #'
-#' @param nexus_file
+#' @param nexus.file
 #' Path to a NEXUS file (\code{.nex} or \code{.nexus}) that already contains a valid
 #' MrBayes block (i.e., \code{begin mrbayes;} ... \code{end;}).
 #'
-#' @param mrbayes_dir
+#' @param mrbayes.dir
 #' Path to the folder containing the MrBayes executable. On macOS/Linux this is
 #' typically a folder containing \code{mb}; on Windows, \code{mb.exe}. If the
-#' executable is not found directly in \code{mrbayes_dir}, the function also checks
-#' \code{file.path(mrbayes_dir, "bin")}. Typical values for \code{mrbayes_dir}:
+#' executable is not found directly in \code{mrbayes.dir}, the function also checks
+#' \code{file.path(mrbayes.dir, "bin")}. Typical values for \code{mrbayes.dir}:
 #' - macOS (Intel, Homebrew): \code{"/usr/local/bin"}
 #' - macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
 #' - macOS/Linux (local install): \code{"~/.local/bin"} (use \code{path.expand("~/.local/bin")})
 #' - Windows (typical): \code{"C:/Program Files/MrBayes"} or a folder containing \code{mb.exe}
 #'
-#' @param run_dir
+#' @param run.dir
 #' Directory where the analysis will run. If \code{NULL}, a new folder named
 #' \code{mrbayes_run_YYYYmmdd_HHMMSS} is created in \code{getwd()}.
 #'
-#' @param copy_mode
-#' Either \code{"copy"} (default) or \code{"move"}. Determines whether \code{nexus_file}
-#' is copied to \code{run_dir} or moved there before running MrBayes.
+#' @param copy.mode
+#' Either \code{"copy"} (default) or \code{"move"}. Determines whether \code{nexus.file}
+#' is copied to \code{run.dir} or moved there before running MrBayes.
 #'
 #' @param quiet
 #' Logical. If \code{TRUE}, suppresses most informational messages (default: \code{FALSE}).
@@ -69,7 +69,7 @@
 #' Logical. If \code{TRUE}, prints MrBayes output to the R console (default: \code{TRUE}).
 #' Live streaming is most reliable with \pkg{processx}.
 #'
-#' @param use_processx
+#' @param use.processx
 #' Logical. If \code{TRUE} (default), uses \pkg{processx} when installed to provide
 #' robust output streaming and a programmatic stop handle.
 #'
@@ -79,7 +79,7 @@
 #' \code{stop()} to terminate the run. Requires \pkg{processx}. Default: \code{FALSE}.
 #'
 #' @return
-#' A list with (at minimum) \code{exe_path}, \code{run_dir}, \code{nexus_path},
+#' A list with (at minimum) \code{exe_path}, \code{run.dir}, \code{nexus_path},
 #' \code{stdout}, \code{stderr}, \code{exit_status}, and \code{error}. When
 #' \pkg{processx} is used, the list additionally includes \code{proc} (a
 #' \pkg{processx} process object) and \code{stop}. When \code{background = TRUE},
@@ -89,7 +89,7 @@
 #' \dontrun{
 #' # Background mode (recommended for stop-anytime control)
 #' res <- mrbayesRun("analysis.nex",
-#'                   mrbayes_dir = "/usr/local/bin",
+#'                   mrbayes.dir = "/usr/local/bin",
 #'                   background = TRUE)
 #' res$poll()          # print new output
 #' mrbayesStop(res)    # graceful stop
@@ -97,7 +97,7 @@
 #'
 #' # Foreground mode (blocking): stop with Esc in RStudio
 #' mrbayesRun("analysis.nex",
-#'            mrbayes_dir = "/usr/local/bin")
+#'            mrbayes.dir = "/usr/local/bin")
 #' }
 #'
 #' @seealso \code{\link{evomodelTest}}
@@ -106,33 +106,33 @@
 #'
 #' @export
 #'
-mrbayesRun <- function(nexus_file,
-                       mrbayes_dir,
-                       run_dir = NULL,
-                       copy_mode = "copy",
+mrbayesRun <- function(nexus.file,
+                       mrbayes.dir,
+                       run.dir = NULL,
+                       copy.mode = "copy",
                        quiet = FALSE,
                        live = TRUE,
-                       use_processx = TRUE,
+                       use.processx = TRUE,
                        background = FALSE) {
 
-  if (!copy_mode %in% c("copy", "move")) stop("copy_mode must be 'copy' or 'move'.")
+  if (!copy.mode %in% c("copy", "move")) stop("copy.mode must be 'copy' or 'move'.")
   if (!is.logical(background) || length(background) != 1) stop("background must be TRUE/FALSE.")
   if (!is.logical(live) || length(live) != 1) stop("live must be TRUE/FALSE.")
-  if (!is.logical(use_processx) || length(use_processx) != 1) stop("use_processx must be TRUE/FALSE.")
+  if (!is.logical(use.processx) || length(use.processx) != 1) stop("use.processx must be TRUE/FALSE.")
 
-  if (is.null(nexus_file) || !nzchar(nexus_file)) stop("nexus_file is required.")
-  if (!file.exists(nexus_file)) stop("nexus_file does not exist: ", nexus_file)
-  nexus_file <- normalizePath(nexus_file, winslash = "/", mustWork = TRUE)
+  if (is.null(nexus.file) || !nzchar(nexus.file)) stop("nexus.file is required.")
+  if (!file.exists(nexus.file)) stop("nexus.file does not exist: ", nexus.file)
+  nexus.file <- normalizePath(nexus.file, winslash = "/", mustWork = TRUE)
 
-  if (is.null(mrbayes_dir) || !nzchar(mrbayes_dir)) stop("mrbayes_dir is required.")
-  if (!dir.exists(mrbayes_dir)) stop("mrbayes_dir does not exist: ", mrbayes_dir)
-  mrbayes_dir <- normalizePath(mrbayes_dir, winslash = "/", mustWork = TRUE)
+  if (is.null(mrbayes.dir) || !nzchar(mrbayes.dir)) stop("mrbayes.dir is required.")
+  if (!dir.exists(mrbayes.dir)) stop("mrbayes.dir does not exist: ", mrbayes.dir)
+  mrbayes.dir <- normalizePath(mrbayes.dir, winslash = "/", mustWork = TRUE)
 
   exe_name <- if (identical(.Platform$OS.type, "windows")) "mb.exe" else "mb"
 
-  exe_path <- file.path(mrbayes_dir, exe_name)
+  exe_path <- file.path(mrbayes.dir, exe_name)
   if (!file.exists(exe_path)) {
-    exe_alt <- file.path(mrbayes_dir, "bin", exe_name)
+    exe_alt <- file.path(mrbayes.dir, "bin", exe_name)
     if (!file.exists(exe_alt)) {
       stop("MrBayes executable not found.\nTried: ", exe_path, "\nAlso tried: ", exe_alt)
     }
@@ -140,37 +140,37 @@ mrbayesRun <- function(nexus_file,
   }
   exe_path <- normalizePath(exe_path, winslash = "/", mustWork = TRUE)
 
-  if (is.null(run_dir)) {
+  if (is.null(run.dir)) {
     stamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-    run_dir <- file.path(getwd(), paste0("mrbayes_run_", stamp))
+    run.dir <- file.path(getwd(), paste0("mrbayes_run_", stamp))
   }
-  dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
-  run_dir <- normalizePath(run_dir, winslash = "/", mustWork = TRUE)
+  dir.create(run.dir, recursive = TRUE, showWarnings = FALSE)
+  run.dir <- normalizePath(run.dir, winslash = "/", mustWork = TRUE)
 
-  dest_nexus <- file.path(run_dir, basename(nexus_file))
-  if (copy_mode == "copy") {
-    ok <- file.copy(nexus_file, dest_nexus, overwrite = TRUE)
-    if (!ok) stop("Failed to copy nexus_file into run_dir.")
+  dest_nexus <- file.path(run.dir, basename(nexus.file))
+  if (copy.mode == "copy") {
+    ok <- file.copy(nexus.file, dest_nexus, overwrite = TRUE)
+    if (!ok) stop("Failed to copy nexus.file into run.dir.")
   } else {
-    ok <- file.rename(nexus_file, dest_nexus)
-    if (!ok) stop("Failed to move nexus_file into run_dir.")
+    ok <- file.rename(nexus.file, dest_nexus)
+    if (!ok) stop("Failed to move nexus.file into run.dir.")
   }
 
-  stdout_file <- file.path(run_dir, "mrbayes_stdout.txt")
-  stderr_file <- file.path(run_dir, "mrbayes_stderr.txt")
+  stdout_file <- file.path(run.dir, "mrbayes_stdout.txt")
+  stderr_file <- file.path(run.dir, "mrbayes_stderr.txt")
 
   if (!quiet) {
     message("MrBayes executable: ", exe_path)
-    message("Run directory: ", run_dir)
+    message("Run directory: ", run.dir)
     message("Running NEXUS: ", dest_nexus)
   }
 
-  want_processx <- isTRUE(use_processx) && requireNamespace("processx", quietly = TRUE)
+  want_processx <- isTRUE(use.processx) && requireNamespace("processx", quietly = TRUE)
   if (isTRUE(background) && !want_processx) stop("background=TRUE requires the processx package.")
 
   old_wd <- getwd()
   on.exit(setwd(old_wd), add = TRUE)
-  setwd(run_dir)
+  setwd(run.dir)
 
   # ---- processx path (supports background + programmatic stop) ----
   if (want_processx) {
@@ -194,7 +194,7 @@ mrbayesRun <- function(nexus_file,
     proc <- processx::process$new(
       command = exe_path,
       args = c(basename(dest_nexus)),
-      wd = run_dir,
+      wd = run.dir,
       stdout = "|",
       stderr = "|",
       cleanup = TRUE
@@ -237,7 +237,7 @@ mrbayesRun <- function(nexus_file,
     if (isTRUE(background)) {
       return(list(
         exe_path = exe_path,
-        run_dir = run_dir,
+        run_dir = run.dir,
         nexus_path = dest_nexus,
         stdout = stdout_file,
         stderr = stderr_file,
@@ -272,7 +272,7 @@ mrbayesRun <- function(nexus_file,
 
     return(list(
       exe_path = exe_path,
-      run_dir = run_dir,
+      run_dir = run.dir,
       nexus_path = dest_nexus,
       stdout = stdout_file,
       stderr = stderr_file,
@@ -300,7 +300,7 @@ mrbayesRun <- function(nexus_file,
 
   list(
     exe_path = exe_path,
-    run_dir = run_dir,
+    run_dir = run.dir,
     nexus_path = dest_nexus,
     stdout = stdout_file,
     stderr = stderr_file,
@@ -314,7 +314,7 @@ mrbayesRun <- function(nexus_file,
 #' @description
 #' Convenience wrapper to stop a MrBayes run returned by \code{\link{mrbayesRun}}.
 #' For programmatic stopping, the run must have been started with \pkg{processx}
-#' (i.e., \code{use_processx = TRUE}) and, for practical "stop anytime" control,
+#' (i.e., \code{use.processx = TRUE}) and, for practical "stop anytime" control,
 #' \code{background = TRUE}.
 #'
 #' @param res A result object returned by \code{\link{mrbayesRun}}.

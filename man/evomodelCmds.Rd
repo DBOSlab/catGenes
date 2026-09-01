@@ -4,10 +4,10 @@
 \alias{evomodelCmds}
 \title{Convert model names into efficient MrBayes commands}
 \usage{
-evomodelCmds(model_vector)
+evomodelCmds(model.vector)
 }
 \arguments{
-\item{model_vector}{A character vector of model names where the position/index
+\item{model.vector}{A character vector of model names where the position/index
 corresponds to the MrBayes partition number (e.g., \code{c("GTR+G+I", "HKY+G", "GTR+G+I")}).
 Partition 1 gets the first model, Partition 2 the second, etc.}
 }
@@ -25,7 +25,7 @@ Convert model names into efficient MrBayes commands
 \examples{
 # Partitions 1 and 3 share the same model, partition 2 is different
 models <- c("GTR+G(4)+I", "HKY+G(4)", "GTR+G(4)+I")
-cmds <- evomodelCmds(model_vector = models)
+cmds <- evomodelCmds(model.vector = models)
 cat(cmds$all_commands, sep = "\n")
 
 }

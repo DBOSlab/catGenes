@@ -4,18 +4,18 @@
 \alias{combineFASTA}
 \title{Combine multiple FASTA files into a single file}
 \usage{
-combineFASTA(input_files = NULL,
-             output_file = "combined_sequences.fasta",
+combineFASTA(input.files = NULL,
+             output.file = "combined_sequences.fasta",
              save = TRUE,
              verbose = TRUE,
              dir = "RESULTS_combineFASTA")
 }
 \arguments{
-\item{input_files}{Character vector specifying the paths to FASTA files to be
+\item{input.files}{Character vector specifying the paths to FASTA files to be
 combined. This parameter is required - users must specify exactly which files
 they want to combine.}
 
-\item{output_file}{Character string specifying the name of the output combined
+\item{output.file}{Character string specifying the name of the output combined
 FASTA file. Default is "combined_sequences.fasta".}
 
 \item{save}{Logical. If \code{TRUE} (default), the combined sequences are saved
@@ -57,17 +57,17 @@ all input files are included in the output.
 \examples{
 \dontrun{
 # Basic usage: combine specific FASTA files
-result <- combineFASTA(input_files = c("file1.fasta", "file2.fasta", "file3.fasta"))
+result <- combineFASTA(input.files = c("file1.fasta", "file2.fasta", "file3.fasta"))
 
 # Combine files with custom output name
 result <- combineFASTA(
-  input_files = c("data/gene1.fasta", "data/gene2.fasta"),
-  output_file = "all_genes.fasta"
+  input.files = c("data/gene1.fasta", "data/gene2.fasta"),
+  output.file = "all_genes.fasta"
 )
 
 # Return results without saving to disk
 result <- combineFASTA(
-  input_files = c("temp1.fasta", "temp2.fasta"),
+  input.files = c("temp1.fasta", "temp2.fasta"),
   save = FALSE,
   verbose = TRUE
 )

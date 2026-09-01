@@ -4,23 +4,23 @@
 \alias{mrbayesRun}
 \title{Run MrBayes from RStudio using an existing NEXUS file}
 \usage{
-mrbayesRun(nexus_file,
-           mrbayes_dir,
-           run_dir = NULL,
-           copy_mode = "copy",
+mrbayesRun(nexus.file,
+           mrbayes.dir,
+           run.dir = NULL,
+           copy.mode = "copy",
            quiet = FALSE,
            live = TRUE,
-           use_processx = TRUE,
+           use.processx = TRUE,
            background = FALSE)
 }
 \arguments{
-\item{nexus_file}{Path to a NEXUS file (\code{.nex} or \code{.nexus}) that already contains a valid
+\item{nexus.file}{Path to a NEXUS file (\code{.nex} or \code{.nexus}) that already contains a valid
 MrBayes block (i.e., \code{begin mrbayes;} ... \code{end;}).}
 
-\item{mrbayes_dir}{Path to the folder containing the MrBayes executable. On macOS/Linux this is
+\item{mrbayes.dir}{Path to the folder containing the MrBayes executable. On macOS/Linux this is
 typically a folder containing \code{mb}; on Windows, \code{mb.exe}. If the
-executable is not found directly in \code{mrbayes_dir}, the function also checks
-\code{file.path(mrbayes_dir, "bin")}. Typical values for \code{mrbayes_dir}:
+executable is not found directly in \code{mrbayes.dir}, the function also checks
+\code{file.path(mrbayes.dir, "bin")}. Typical values for \code{mrbayes.dir}:
 \itemize{
 \item macOS (Intel, Homebrew): \code{"/usr/local/bin"}
 \item macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
@@ -28,18 +28,18 @@ executable is not found directly in \code{mrbayes_dir}, the function also checks
 \item Windows (typical): \code{"C:/Program Files/MrBayes"} or a folder containing \code{mb.exe}
 }}
 
-\item{run_dir}{Directory where the analysis will run. If \code{NULL}, a new folder named
+\item{run.dir}{Directory where the analysis will run. If \code{NULL}, a new folder named
 \code{mrbayes_run_YYYYmmdd_HHMMSS} is created in \code{getwd()}.}
 
-\item{copy_mode}{Either \code{"copy"} (default) or \code{"move"}. Determines whether \code{nexus_file}
-is copied to \code{run_dir} or moved there before running MrBayes.}
+\item{copy.mode}{Either \code{"copy"} (default) or \code{"move"}. Determines whether \code{nexus.file}
+is copied to \code{run.dir} or moved there before running MrBayes.}
 
 \item{quiet}{Logical. If \code{TRUE}, suppresses most informational messages (default: \code{FALSE}).}
 
 \item{live}{Logical. If \code{TRUE}, prints MrBayes output to the R console (default: \code{TRUE}).
 Live streaming is most reliable with \pkg{processx}.}
 
-\item{use_processx}{Logical. If \code{TRUE} (default), uses \pkg{processx} when installed to provide
+\item{use.processx}{Logical. If \code{TRUE} (default), uses \pkg{processx} when installed to provide
 robust output streaming and a programmatic stop handle.}
 
 \item{background}{Logical. If \code{TRUE}, starts MrBayes and returns immediately (non-blocking).
@@ -47,7 +47,7 @@ The returned object includes \code{poll()} to print new output on demand and
 \code{stop()} to terminate the run. Requires \pkg{processx}. Default: \code{FALSE}.}
 }
 \value{
-A list with (at minimum) \code{exe_path}, \code{run_dir}, \code{nexus_path},
+A list with (at minimum) \code{exe_path}, \code{run.dir}, \code{nexus_path},
 \code{stdout}, \code{stderr}, \code{exit_status}, and \code{error}. When
 \pkg{processx} is used, the list additionally includes \code{proc} (a
 \pkg{processx} process object) and \code{stop}. When \code{background = TRUE},
@@ -60,7 +60,7 @@ pre-configured NEXUS file that already contains a complete \code{begin mrbayes;}
 command block. The function copies (or moves) the NEXUS file to a dedicated run
 directory, launches MrBayes, and captures the program output.
 
-When \pkg{processx} is installed and \code{use_processx = TRUE}, output can be
+When \pkg{processx} is installed and \code{use.processx = TRUE}, output can be
 streamed live to the R console and the returned object includes a \code{stop()}
 handle that can terminate the run programmatically. Programmatic stopping is
 only useful when \code{background = TRUE}, because in foreground mode the call
@@ -74,7 +74,7 @@ Output capture:
 \itemize{
 \item \code{stdout}: file path where standard output is recorded.
 \item \code{stderr}: file path where errors/warnings are recorded.
-The function runs MrBayes in \code{run_dir}, so all MrBayes output files
+The function runs MrBayes in \code{run.dir}, so all MrBayes output files
 (e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
 }
 
@@ -89,7 +89,7 @@ Stopping the run:
 \dontrun{
 # Background mode (recommended for stop-anytime control)
 res <- mrbayesRun("analysis.nex",
-                  mrbayes_dir = "/usr/local/bin",
+                  mrbayes.dir = "/usr/local/bin",
                   background = TRUE)
 res$poll()          # print new output
 mrbayesStop(res)    # graceful stop
@@ -97,7 +97,7 @@ mrbayesStop(res, TRUE) # force kill
 
 # Foreground mode (blocking): stop with Esc in RStudio
 mrbayesRun("analysis.nex",
-           mrbayes_dir = "/usr/local/bin")
+           mrbayes.dir = "/usr/local/bin")
 }
 
 }

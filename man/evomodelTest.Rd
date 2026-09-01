@@ -4,40 +4,40 @@
 \alias{evomodelTest}
 \title{Automated Evolutionary Model Selection and MrBayes Command Generation}
 \usage{
-evomodelTest(nexus_file_path = NULL,
-             model_criteria = "AIC",
-             models_to_test = "all",
-             include_G = TRUE,
-             include_I = TRUE,
+evomodelTest(nexus.file.path = NULL,
+             model.criteria = "AIC",
+             models.to.test = "all",
+             include.G = TRUE,
+             include.I = TRUE,
              mc.cores = 4,
-             append_mrbayes_to_nexus = TRUE,
-             overwrite_original_nexus = FALSE,
-             combined_nexus_file_path = NULL,
+             append.mrbayes.to.nexus = TRUE,
+             overwrite.original.nexus = FALSE,
+             combined.nexus.file.path = NULL,
              verbose = TRUE,
              dir = "RESULTS_evomodelTest")
 }
 \arguments{
-\item{nexus_file_path}{Path to the NEXUS alignment file(s).}
+\item{nexus.file.path}{Path to the NEXUS alignment file(s).}
 
-\item{model_criteria}{Selection criterion: "AIC" or "BIC" (default: "BIC").}
+\item{model.criteria}{Selection criterion: "AIC" or "BIC" (default: "BIC").}
 
-\item{models_to_test}{Which models to test: "all" for all models, "standard"
+\item{models.to.test}{Which models to test: "all" for all models, "standard"
 for JC/F81/K80/HKY/SYM/GTR only, or a character vector of specific models.}
 
-\item{include_G}{Should Gamma rate heterogeneity be tested? (default: TRUE).}
+\item{include.G}{Should Gamma rate heterogeneity be tested? (default: TRUE).}
 
-\item{include_I}{Should invariant sites be tested? (default: TRUE).}
+\item{include.I}{Should invariant sites be tested? (default: TRUE).}
 
 \item{mc.cores}{Number of cores for parallel computation (default: 4).}
 
-\item{append_mrbayes_to_nexus}{Logical. If TRUE, appends the generated
+\item{append.mrbayes.to.nexus}{Logical. If TRUE, appends the generated
 MrBayes block to each input NEXUS matrix.}
 
-\item{overwrite_original_nexus}{Logical. If TRUE and
-\code{append_mrbayes_to_nexus = TRUE}, the original NEXUS file is overwritten.
+\item{overwrite.original.nexus}{Logical. If TRUE and
+\code{append.mrbayes.to.nexus = TRUE}, the original NEXUS file is overwritten.
 If FALSE, a copy with the same basename is written to the results folder.}
 
-\item{combined_nexus_file_path}{Optional path to a concatenated/combined
+\item{combined.nexus.file.path}{Optional path to a concatenated/combined
 NEXUS matrix. If provided, the function appends the complete combined
 MrBayes block for partitioned analysis to that file.}
 
@@ -64,10 +64,10 @@ corresponding MrBayes commands for phylogenetic analysis.
 evomodelTest("alignment.nex")
 
 # Specify AIC criterion and partition 1
-evomodelTest("alignment.nex", model_criteria = "AIC", partition = "1")
+evomodelTest("alignment.nex", model.criteria = "AIC", partition = "1")
 
 # Test only standard models
-evomodelTest("alignment.nex", models_to_test = "standard")
+evomodelTest("alignment.nex", models.to.test = "standard")
 }
 
 }
