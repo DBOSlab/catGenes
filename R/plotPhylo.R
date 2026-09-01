@@ -369,7 +369,7 @@ plotPhylo <- function(tree = NULL,
   tiplabels <- tree@phylo$tip.label
 
   tree_plot <- ggtree(tree, branch.length = "none", layout = layout,
-                      ladderize = TRUE, size = branch.width, ...)
+                      ladderize = TRUE, linewidth = branch.width, ...)
 
   if (is.null(xlim.tree)) {
     xlim.tree <- max(tree_plot$data$x)+5
@@ -396,7 +396,7 @@ plotPhylo <- function(tree = NULL,
         geom_hilight(node = ggtree::MRCA(tree, highlight.clade[[i]]),
                      fill = fill.gradient[i], gradient = TRUE,
                      gradient.direction = "tr", alpha = 0.8) +
-        geom_tree(layout = layout, size = branch.width)
+        geom_tree(layout = layout, linewidth = branch.width)
     }
   }
 
@@ -478,12 +478,26 @@ plotPhylo <- function(tree = NULL,
   # Add support values below branches
   if (branch.supports) {
 
-    # Extract numeric values from prob (handling combined supports like "0.95/85")
-    tree_plot$data$prob_numeric <- as.numeric(gsub("[/].*", "", as.character(tree_plot$data$prob)))
+    # Extract the first support value from combined values such as "0.95/85/90".
+    # Non-numeric entries (e.g. "-", "", "Root") are treated as missing values.
+    prob_chr <- as.character(tree_plot$data$prob)
+    prob_chr <- sub("/.*$", "", prob_chr)
+
+    tree_plot$data$prob_numeric <- suppressWarnings(
+      as.numeric(prob_chr)
+    )
+
+    # Determine whether supports are on a posterior-probability (0-1)
+    # or bootstrap (0-100) scale.
+    is_bootstrap_scale <- any(
+      tree_plot$data$prob_numeric > 1,
+      na.rm = TRUE
+    )
 
     # Check if all support values are 1 or 100 (meaning no variation to show as numbers)
     all_max_support <- FALSE
-    if (!any(intree@data$prob > 1, na.rm = TRUE)) {
+
+    if (!is_bootstrap_scale) {
       # For posterior probabilities
       non_na_probs <- tree_plot$data$prob_numeric[!is.na(tree_plot$data$prob_numeric) & !tree_plot$data$isTip]
       if (length(non_na_probs) > 0 && all(non_na_probs == 1 | non_na_probs == 0)) {
@@ -501,30 +515,30 @@ plotPhylo <- function(tree = NULL,
     if (layout != "circular" && !all_max_support) {
       if (!is.null(add.raxml.tree) |
           !is.null(add.parsi.tree)) {
-        if (!any(intree@data$prob > 1, na.rm = TRUE)) {
+        if (!is_bootstrap_scale) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & as.numeric(gsub("[/].*", "", prob)) >= 0.5 &
-                             as.numeric(gsub("[/].*", "", prob)) < 1,
+            geom_text2(aes(subset = !isTip & prob_numeric >= 0.5 &
+                             prob_numeric < 1,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & as.numeric(gsub("[/].*", "", prob)) >= 50 &
-                             as.numeric(gsub("[/].*", "", prob)) < 100,
+            geom_text2(aes(subset = !isTip & prob_numeric >= 50 &
+                             prob_numeric < 100,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         }
 
       } else {
-        if (!any(intree@data$prob > 1, na.rm = TRUE)) {
+        if (!is_bootstrap_scale) {
           tree_plot <- tree_plot +
             geom_text2(aes(subset = !isTip & prob >= 0.5 & prob < 1,
                            label = stringr::str_extract(prob, "[[:digit:]][.][[:digit:]][[:digit:]]")),
                        size = 3, color = "gray40", hjust = 1.5, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & as.numeric(gsub("[/].*", "", prob)) >= 50 &
-                             as.numeric(gsub("[/].*", "", prob)) < 100,
+            geom_text2(aes(subset = !isTip & prob_numeric >= 50 &
+                             prob_numeric < 100,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         }
@@ -532,7 +546,7 @@ plotPhylo <- function(tree = NULL,
     }
 
     # Determine support thresholds and create a factor variable for legend
-    if (!any(intree@data$prob > 1, na.rm = TRUE)) {
+    if (!is_bootstrap_scale) {
       # For posterior probabilities (0-1 scale)
       support_cat <- cut(
         tree_plot$data$prob_numeric,
@@ -610,7 +624,7 @@ plotPhylo <- function(tree = NULL,
       tree_plot <- tree_plot + theme(
         legend.position = support.legend.position,
         legend.justification = c(0, 1),
-        legend.background = element_rect(fill = "white", color = "gray80", size = 0.3),
+        legend.background = element_rect(fill = "white", color = "gray80", linewidth = 0.3),
         legend.key.size = unit(0.5, "cm"),
         legend.text = element_text(size = 8),
         legend.title = element_text(size = 9, face = "bold")
@@ -635,7 +649,7 @@ plotPhylo <- function(tree = NULL,
 
   # Create phylogram
   if (phylogram.side & layout != "circular") {
-    phylogram <- ggtree(tree, layout = layout, ladderize=TRUE, size = 0.1) +
+    phylogram <- ggtree(tree, layout = layout, ladderize = TRUE, linewidth = 0.1) +
       theme(
         panel.background = element_rect(fill = "transparent", color = NA),
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -647,14 +661,14 @@ plotPhylo <- function(tree = NULL,
           geom_hilight(node = ggtree::MRCA(tree, highlight.clade[[i]]),
                        fill = fill.gradient[i], gradient = TRUE,
                        gradient.direction = "tr", alpha = 0.8,
-                       size = 0.1) +
-          geom_tree(layout = layout, size = 0.1)
+                       linewidth = 0.1) +
+          geom_tree(layout = layout, linewidth = 0.1)
       }
     }
 
     # Add supports as symbols on the phylogram
     if (phylogram.supports) {
-      if (!any(intree@data$prob > 1)) {
+      if (!is_bootstrap_scale) {
         phylogram <- phylogram +
           geom_point2(aes(subset = prob>=1 & isTip == FALSE), size = 1.5, shape = 22,
                       fill = "black", alpha = 0.8, stroke = 0.05) +
@@ -678,8 +692,9 @@ plotPhylo <- function(tree = NULL,
     }
 
     phylogram <- phylogram +
-      geom_treescale(x = 0, y = max(phylogram$data$y)/1.1, color = "gray60",
-                     fontsize = 3, linesize = 0.5, offset = 1)
+      ggtree::geom_treescale(x = 0, y = max(phylogram$data$y)/1.1,
+                             color = "gray60",
+                             fontsize = 3, linesize = 0.5, offset = 1)
 
     if (is.null(phylogram.height)) phylogram.height = max(tree_plot$data$y)*30/100
 
