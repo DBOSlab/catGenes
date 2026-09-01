@@ -148,6 +148,17 @@ combineFASTA <- function(input.files = NULL,
     }
 
     tryCatch({
+      # Guard against empty/headerless FASTA files: ape::read.FASTA() segfaults
+      # (rather than raising a catchable error) when given a file with no
+      # ">" records, so we must not call it on those files at all.
+      if (file.size(file) == 0 ||
+          !any(grepl("^>", readLines(file, warn = FALSE)))) {
+        if (verbose) {
+          message("  No sequences found in this file.")
+        }
+        next
+      }
+
       # Read sequences
       sequences <- suppressWarnings(
         ape::read.FASTA(file)
