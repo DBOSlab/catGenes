@@ -61,13 +61,13 @@ result <- combineFASTA(input.files = c("file1.fasta", "file2.fasta", "file3.fast
 
 # Combine files with custom output name
 result <- combineFASTA(
-  input.files = c("data/gene1.fasta", "data/gene2.fasta"),
-  output.file = "all_genes.fasta"
+  input.files = c("data/file1.fasta", "data/file2.fasta"),
+  output.file = "all_files_combined.fasta"
 )
 
 # Return results without saving to disk
 result <- combineFASTA(
-  input.files = c("temp1.fasta", "temp2.fasta"),
+  input.files = c("file1.fasta", "file2.fasta"),
   save = FALSE,
   verbose = TRUE
 )

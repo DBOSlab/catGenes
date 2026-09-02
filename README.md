@@ -201,8 +201,8 @@ mineTaxa(
 
 ``` r
 result <- combineFASTA(
-  input_files = c("gene1.fasta", "gene2.fasta", "gene3.fasta"),
-  output_file = "combined_sequences.fasta"
+  input_files = c("file1.fasta", "file2.fasta", "file3.fasta"),
+  output_file = "all_combined_files.fasta"
 )
 ```
 
