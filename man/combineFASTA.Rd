@@ -30,27 +30,22 @@ Default is "RESULTS_combineFASTA". A subdirectory with current date will be
 created within this directory when \code{save = TRUE}.}
 }
 \value{
-A list containing:
-\itemize{
-\item \code{sequences}: DNAbin object with all combined sequences
-\item \code{summary}: Data frame with summary statistics
-\item \code{output_path}: Path to the saved combined FASTA file (if saved)
-}
+A list containing: (i) \code{sequences}: DNAbin object with all combined
+sequences; (ii) \code{summary}: Data frame with summary statistics; and (iii)
+\code{output_path}: Path to the saved combined FASTA file (if saved).
 }
 \description{
 This function reads multiple FASTA files and combines them into a
 single FASTA file. It saves the combined sequences to a specified output directory.
 }
 \details{
-The function performs the following steps:
-\enumerate{
-\item Validates that all specified input files exist
-\item Creates an output directory with date stamp if \code{save = TRUE}
-\item Reads each specified FASTA file using \code{ape::read.FASTA()}
-\item Combines all sequences into a single DNAbin object
-\item Saves the combined sequences to the output file if \code{save = TRUE}
-\item Returns summary statistics
-}
+The function performs the following steps: (i) validates that all specified
+input files exist; (ii) creates an output directory with date stamp if \code{save = TRUE};
+(iii) reads each specified FASTA file using \code{ape::read.FASTA()}; (iv)
+combines all sequences into a single DNAbin object; (v) saves the combined
+sequences to the output file if \code{save = TRUE}; and (vi) returns summary
+statistics.
+
 Note: This function does not remove duplicate sequences. All sequences from
 all input files are included in the output.
 }
