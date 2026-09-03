@@ -113,7 +113,7 @@ nexusdframe <- function(x, file,
     x <- .replace_terminal_gaps(x)
   }
 
-  writtenby <- paste("[catGenes (DBOSLab-UFBA), ", date(), "]\n\n", sep = "")
+  writtenby <- paste("[catGenes (DBOSLab-JBRJ), ", date(), "]\n\n", sep = "")
   nexus <- paste("#NEXUS", "", sep="\n")
   begindata <- paste("BEGIN DATA;")
   dimname <- paste("DIMENSIONS")

@@ -955,6 +955,10 @@ plotPhylo <- function(tree = NULL,
     highlight.taxa <- gsub("_", " ", highlight.taxa)
     tf <- lapply(highlight.taxa, function(x) grepl(paste0(x, collapse = "|"),
                                                    tiplabels))
+    # Recycle highlight.color so a single color can be reused across all
+    # highlight.taxa, while still allowing one distinct color per taxon
+    # when highlight.color already has one entry per element of highlight.taxa.
+    highlight.color <- rep_len(highlight.color, length(highlight.taxa))
     tipdata_high <- data.frame(tiplabels = tiplabels,
                                tocolor = NA)
     for (i in seq_along(tf)) {

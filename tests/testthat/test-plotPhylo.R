@@ -45,6 +45,33 @@ test_that("plotPhylo highlights specified taxa without erroring", {
   expect_s3_class(p, "ggtree")
 })
 
+test_that("a single highlight.color is recycled across every highlight.taxa", {
+  # .col.tiplabels() expects tiplabels with underscores already converted to
+  # spaces, matching the conversion plotPhylo() itself applies (R/plotPhylo.R,
+  # `tree@phylo$tip.label <- gsub("_", " ", ...)`) before calling this helper.
+  tiplabels <- c("Genus alpha", "Genus beta", "Genus gamma")
+
+  tipdata <- catGenes:::.col.tiplabels(
+    tiplabels = tiplabels,
+    highlight.taxa = c("Genus_alpha", "Genus_beta"),
+    highlight.color = "red"
+  )
+
+  expect_equal(tipdata$tocolor, c("red", "red", "black"))
+})
+
+test_that(".col.tiplabels still supports one distinct color per taxon", {
+  tiplabels <- c("Genus alpha", "Genus beta", "Genus gamma")
+
+  tipdata <- catGenes:::.col.tiplabels(
+    tiplabels = tiplabels,
+    highlight.taxa = c("Genus_alpha", "Genus_beta"),
+    highlight.color = c("red", "blue")
+  )
+
+  expect_equal(tipdata$tocolor, c("red", "blue", "black"))
+})
+
 test_that("plotPhylo prunes the requested taxa out of the tree", {
   data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
   tips <- Harpalyce_bayes_tree@phylo$tip.label
