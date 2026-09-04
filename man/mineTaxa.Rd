@@ -84,30 +84,18 @@ and plastome separation. It iss particularly useful for phylogenetic studies
 requiring large-scale sequence retrieval with consistent naming conventions.
 }
 \details{
-The function performs the following steps:
-\enumerate{
-\item Connects to GenBank using the specified search term
-\item Downloads sequences (up to \code{retmax} records)
-\item If \code{clean.taxa = TRUE}:
-\itemize{
-\item Extracts and cleans organism names from each accession
-\item Optionally adds voucher information
-\item Standardizes naming format: Genus_species_voucher_accession
-\item Separates plastomes if \code{plastome.apart = TRUE}
-\item Removes duplicates if \code{rm.duplicated = TRUE}
-}
-\item Saves results to specified directory with date-stamped subfolder
-}
+The function performs the following steps: (1) Connects to GenBank using the
+specified search term; (2) Downloads sequences (up to \code{retmax} records);
+and (3) If \code{clean.taxa = TRUE}: (i) extracts and cleans organism names
+from each accession; (ii) optionally adds voucher information; (iii) standardizes
+naming format: Genus_species_voucher_accession; (iv) separates plastomes if
+\code{plastome.apart = TRUE}; (v) removes duplicates if \code{rm.duplicated = TRUE};
+and (vi) saves results to specified directory with date-stamped subfolder.
 
-Taxon name cleaning includes:
-\itemize{
-\item Removing periods and hyphens
-\item Converting "var.", "subsp.", "f." to simple spaces
-\item Converting spaces to underscores
-\item Trimming "sp." designations
-\item Removing trailing underscores
-\item Handling hybrid cultivars
-}
+Taxon name cleaning includes: (i) removing periods and hyphens; (ii) converting
+"var.", "subsp.", "f." to simple spaces; (iii) converting spaces to underscores;
+(iv) trimming "sp." designations; (v) removing trailing underscores; (vi) handling
+hybrid cultivars.
 }
 \note{
 \itemize{
