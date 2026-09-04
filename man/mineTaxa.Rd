@@ -12,6 +12,7 @@ mineTaxa(term = NULL,
          original.query = FALSE,
          plastome.apart = TRUE,
          rm.duplicated = TRUE,
+         rm.sp = FALSE,
          retmax = 4000,
          verbose = TRUE,
          save = TRUE,
@@ -49,6 +50,9 @@ distinguishing whole plastomes from individual gene sequences.}
 \item{rm.duplicated}{Logical. If \code{TRUE} (default), removes duplicate sequences
 from the same species, keeping only the longest sequence. Applied separately
 to plastomes and other sequences.}
+
+\item{rm.sp}{Logical. If \code{TRUE}, removes all sequences
+from accessions identified at genus level only, i.e. accessions with "sp".}
 
 \item{retmax}{Numeric. Maximum number of sequences to retrieve from GenBank.
 Default is 4000. Increase for large queries, but note NCBI rate limits.}
@@ -148,6 +152,17 @@ result4 <- mineTaxa(
   verbose = FALSE,
   save = FALSE
 )
+
+# Example 5: Basic search for multiple genera and ITS sequences
+  term = "(Macrolobium[Organism] OR Heterostemon[Organism]) AND (ITS OR \"internal transcribed spacer\")",
+  filename = "Macro_Heter_ITS.fasta"
+)
+
+# Example 6: Basic search for specific GenBank numbers
+  term = "KJ136899 OR KJ136869",
+  filename = "out_seqs.fasta"
+)
+
 }
 
 }

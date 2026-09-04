@@ -54,7 +54,7 @@
 #'
 #' data(GenBank_accessions)
 #'
-# 'todaydate <- format(Sys.time(), "%d%b%Y")
+#' todaydate <- format(Sys.time(), "%d%b%Y")
 #' folder_name_mined_seqs <- paste0("RESULTS_mineSeq/", todaydate)
 #'
 #' mineSeq(inputdf = GenBank_accessions,
