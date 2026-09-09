@@ -51,6 +51,7 @@ LazyData: true
 Suggests:
     testthat (>= 3.0.0),
     covr,
+    deeptime,
     withr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
