@@ -70,8 +70,10 @@ test_that("convertAlign skips a file already in the target format", {
   df <- fixture_seq_dframe()
   fastadframe(df, file = file.path(indir, "gene1.fasta"))
 
-  expect_message(convertAlign(filepath = indir, format = "FASTA", verbose = FALSE, dir = outdir),
-                 "already in FASTA format")
+  expect_warning(
+    expect_message(convertAlign(filepath = indir, format = "FASTA", verbose = FALSE, dir = outdir),
+                   "already in FASTA format"),
+    "nothing was saved")
 
   foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
   expect_length(list.files(foldername), 0)
@@ -88,4 +90,51 @@ test_that("convertAlign rmfiles = TRUE deletes the original input file", {
   convertAlign(filepath = indir, format = "NEXUS", rmfiles = TRUE, verbose = FALSE, dir = outdir)
 
   expect_false(file.exists(infile))
+})
+
+test_that("convertAlign keeps dots in file names so converted files do not collide", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+
+  df <- fixture_seq_dframe()
+  fastadframe(df, file = file.path(indir, "gene.v1.fasta"))
+  fastadframe(df, file = file.path(indir, "gene.v2.fasta"))
+
+  convertAlign(filepath = indir, format = "NEXUS", verbose = FALSE, dir = outdir)
+
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  expect_setequal(basename(list.files(foldername)), c("gene.v1.nex", "gene.v2.nex"))
+})
+
+test_that("convertAlign converts FASTA files with wrapped sequences and blank lines", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+
+  writeLines(c(">A", "ACGTACGTAC", "GTACGTACGT", "", ">B", "ACGTACGAAC", "GTACGTACGT", ""),
+             file.path(indir, "wrapped.fasta"))
+
+  convertAlign(filepath = indir, format = "PHYLIP", verbose = FALSE, dir = outdir)
+
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  lines <- readLines(file.path(foldername, "wrapped.phy"))
+  expect_true(any(grepl("ACGTACGTACGTACGTACGT", lines)))
+})
+
+test_that("convertAlign ignores sub-directories and warns when nothing is converted", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+
+  df <- fixture_seq_dframe()
+  fastadframe(df, file = file.path(indir, "gene1.fasta"))
+  dir.create(file.path(indir, "old_results"))
+
+  expect_no_error(
+    convertAlign(filepath = indir, format = "NEXUS", verbose = FALSE, dir = outdir)
+  )
+  expect_warning(
+    suppressMessages(
+      convertAlign(filepath = indir, format = "FASTA", verbose = FALSE, dir = outdir)
+    ),
+    "nothing was saved"
+  )
 })

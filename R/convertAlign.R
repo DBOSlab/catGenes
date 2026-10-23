@@ -61,6 +61,7 @@
 #'
 #' @importFrom ape read.nexus.data
 #' @importFrom stats setNames
+#' @importFrom tools file_path_sans_ext
 #'
 #' @export
 #'
@@ -70,23 +71,40 @@ convertAlign <- function(filepath = NULL,
                          verbose = TRUE,
                          dir = "RESULTS_convertAlign") {
 
+  if (is.null(filepath) || !dir.exists(filepath)) {
+    stop("'filepath' must be the path to an existing directory of alignments.")
+  }
+  if (is.null(format) || !toupper(format) %in% c("NEXUS", "FASTA", "PHYLIP")) {
+    stop("'format' must be one of 'NEXUS', 'FASTA' or 'PHYLIP'.")
+  }
+  format <- toupper(format)
+
+  # Only regular files (skip sub-directories such as a previous output folder)
   inputfiles <- list.files(filepath)
-  inputfiles_names <- gsub("[.].*", "", inputfiles)
+  inputfiles <- inputfiles[!dir.exists(file.path(filepath, inputfiles))]
+  # Drop only the extension so names like "gene.v2.fasta" stay distinct
+  inputfiles_names <- tools::file_path_sans_ext(inputfiles)
 
   # Create folder to save the converted DNA sequences
   foldername <- paste0(dir, "/", format(Sys.time(), "%d%b%Y"))
-  if (!dir.exists(dir)) {
-    dir.create(dir)
-  }
   if (!dir.exists(foldername)) {
-    dir.create(foldername)
+    dir.create(foldername, recursive = TRUE)
   }
 
+  n_converted <- 0
   for (i in seq_along(inputfiles)) {
 
-    temp <- readLines(paste0(filepath, "/", inputfiles[i]))
+    infile <- file.path(filepath, inputfiles[i])
+    temp <- readLines(infile, warn = FALSE)
+    temp <- sub("^\ufeff", "", temp)
+    temp <- temp[nzchar(trimws(temp))]
+    if (length(temp) == 0) {
+      message("The input file ", inputfiles[i], " is empty and was skipped.\n")
+      next
+    }
+    firstchar <- substr(trimws(temp[1]), 1, 1)
 
-    if (strsplit(temp[1], '')[[1]][1] == "#") {
+    if (firstchar == "#") {
       if (format == "NEXUS") {
         message(paste0("The input file ", inputfiles[i],
                        "\nis already in NEXUS format!\n"),
@@ -94,7 +112,7 @@ convertAlign <- function(filepath = NULL,
         next
       }
       # Convert a NEXUS file ####
-      filetoconvert <- ape::read.nexus.data(paste0(filepath, "/", inputfiles[i]))
+      filetoconvert <- ape::read.nexus.data(infile)
       for (j in seq_along(filetoconvert)) {
         filetoconvert[[j]] <- paste(filetoconvert[[j]], collapse = "")
         filetoconvert[[j]] <- toupper(filetoconvert[[j]])
@@ -103,21 +121,23 @@ convertAlign <- function(filepath = NULL,
       seqs <- stats::setNames(data.frame(unlist(filetoconvert, use.names = FALSE)), "sequence")
       convertedfile <- cbind(spp, seqs)
 
-    } else if (strsplit(temp[1], '')[[1]][1] == ">") {
+    } else if (firstchar == ">") {
       if (format == "FASTA") {
         message(paste0("The input file ", inputfiles[i],
                        "\nis already in FASTA format!\n"),
                 "This file was not converted.\n\n")
         next
       }
-      # Convert a FASTA file ####
-      filetoconvert <- readLines(paste0(filepath, "/", inputfiles[i]))
-      tf <- grepl(">", filetoconvert)
-      convertedfile <- data.frame(species = gsub(">", "", filetoconvert[tf]),
-                                  sequence = filetoconvert[!tf])
+      # Convert a FASTA file (sequences may be wrapped over several lines) ####
+      tf <- grepl("^>", trimws(temp))
+      recid <- cumsum(tf)
+      convertedfile <- data.frame(
+        species = trimws(sub("^>", "", trimws(temp[tf]))),
+        sequence = vapply(split(trimws(temp[!tf]), recid[!tf]),
+                          paste, character(1), collapse = ""),
+        row.names = NULL)
 
-    } else if (strsplit(temp[1], '')[[1]][1] != ">" &
-               strsplit(temp[1], '')[[1]][1] != "#") {
+    } else {
       if (format == "PHYLIP") {
         message(paste0("The input file ", inputfiles[i],
                        "\nis already in PHYLIP format!\n"),
@@ -125,38 +145,36 @@ convertAlign <- function(filepath = NULL,
         next
       }
       # Convert a PHYLIP file ####
-      filetoconvert <- readLines(paste0(filepath, "/", inputfiles[i]))
-      filetoconvert <- filetoconvert[-1]
+      filetoconvert <- temp[-1]
       convertedfile <- data.frame(species = gsub("\\s.*", "", filetoconvert),
                                   sequence = gsub(".*\\s", "", filetoconvert))
     }
 
+    ext <- c(NEXUS = ".nex", PHYLIP = ".phy", FASTA = ".fasta")[[format]]
+    outfile <- paste0(foldername, "/", inputfiles_names[i], ext)
+
     if (format == "NEXUS") {
-      nexusdframe(convertedfile, paste0(foldername, "/",
-                                        inputfiles_names[i],".nex"))
-      # Remove original file from the directory
-      if (rmfiles) {
-        unlink(paste0(filepath, "/", inputfiles[i]))
-      }
-
+      nexusdframe(convertedfile, outfile)
     } else if (format == "PHYLIP") {
-      phylipdframe(convertedfile,
-                   paste0(foldername, "/", inputfiles_names[i],".phy"))
-      # Remove original file from the directory
-      if (rmfiles) {
-        unlink(paste0(filepath, "/", inputfiles[i]))
-      }
-
+      phylipdframe(convertedfile, outfile)
     } else if (format == "FASTA") {
-      fastadframe(convertedfile, paste0(foldername, "/",
-                                        inputfiles_names[i],".fasta"))
-      # Remove original file from the directory
-      if (rmfiles) {
-        unlink(paste0(filepath, "/", inputfiles[i]))
-      }
+      fastadframe(convertedfile, outfile)
     }
 
+    n_converted <- n_converted + 1
+    # Remove original file from the directory
+    if (rmfiles) {
+      unlink(infile)
+    }
   }
 
-}
+  if (n_converted == 0) {
+    warning("No alignment was converted, so nothing was saved in ", foldername,
+            ". Input files already in ", format, " format are skipped.")
+  } else if (verbose) {
+    message(n_converted, " alignment(s) converted to ", format,
+            " and saved in: ", foldername)
+  }
 
+  invisible(foldername)
+}
