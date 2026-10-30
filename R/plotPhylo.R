@@ -15,6 +15,11 @@
 #'           add.parsi.tree = NULL,
 #'           highlight.clade = NULL,
 #'           fill.gradient = NULL,
+#'           collapse.clade = NULL,
+#'           collapse.scale = 1,
+#'           collapse.fill = "gray70",
+#'           collapse.label.orientation = "horizontal",
+#'           collapse.label.fontface = "bold",
 #'           show.tip.label = TRUE,
 #'           size.tip.label = 4,
 #'           fontface.tip.label = "italic",
@@ -67,10 +72,36 @@
 #' @param fill.gradient One or more colors to highlight specific clades in the
 #' tree.
 #'
+#' @param collapse.clade A vector of two tip labels whose most recent common
+#' ancestor defines a clade to be collapsed into a triangle, or a list of
+#' multiple vectors with two tip labels each to collapse several clades. The
+#' height of each triangle is proportional to the number of terminals in the
+#' clade. Name the list elements to replace the terminals of a clade with a
+#' clade name, e.g. \code{list("Mexican clade" = c("Harpalyce_arborescens",
+#' "Harpalyce_sp6"))}; clades without a name keep their terminals listed next to
+#' the triangle. Nested clades cannot be collapsed together.
+#'
+#' @param collapse.scale A number between 0 and 1 to shrink the triangles of
+#' named collapsed clades (see \code{collapse.clade}) in relation to the space
+#' originally taken by their terminals, while keeping them proportional to the
+#' number of terminals. Defaults to 1, i.e. no shrinking. Clades without a name
+#' are not shrunk, so their terminal labels do not overlap.
+#'
+#' @param collapse.fill One or more colors to fill the triangles of collapsed
+#' clades, recycled along \code{collapse.clade}. Defaults to "gray70".
+#'
+#' @param collapse.label.orientation Either "horizontal" (default) or
+#' "vertical", the orientation of the names of collapsed clades. Only used for
+#' non-circular layouts; in circular layouts, names follow the angle of the
+#' clade.
+#'
+#' @param collapse.label.fontface The font face of the names of collapsed
+#' clades: "plain", "bold" (default), "italic" or "bold.italic".
+#'
 #' @param show.tip.label A logical indicating whether to show the tip labels on
 #' the phylogeny. Defaults to TRUE, i.e. the labels are shown.
 #'
-#' @param size.tip.label The size of tip labels; defaults to 2.
+#' @param size.tip.label The size of tip labels; defaults to 4.
 #'
 #' @param fontface.tip.label The font face of text, defaults to 3 (italic), others
 #' are 1 (plain), 2 (bold), 4 (bold.italic).
@@ -199,6 +230,17 @@
 #'           dir = "results_edited_phylogeny",
 #'           filename = "Harpalyce_edited_tree",
 #'           format = "pdf")
+#'
+#' # Collapse clades into triangles proportional to their number of terminals:
+#' # the named clade is shown by its name, the unnamed one keeps its terminals
+#' plotPhylo(tree = Harpalyce_bayes_tree,
+#'           collapse.clade = list(
+#'             "Mexican clade" = c("Harpalyce_arborescens_Lezama19187",
+#'                                 "Harpalyce_sp6_Nunez550"),
+#'             c("Poecilanthe_sp2_Saddi933", "Poecilanthe_ulei_Queiroz9584")),
+#'           collapse.scale = 0.5,
+#'           collapse.fill = c("#D53E4F", "gray70"),
+#'           collapse.label.orientation = "horizontal")
 #'}
 #'
 #' @importFrom ggtree ggtree MRCA geom_tiplab geom_hilight xlim_tree geom_text2 geom_point2 geom_treescale geom_tree hexpand td_filter "%<+%"
@@ -225,6 +267,11 @@ plotPhylo <- function(tree = NULL,
                       add.parsi.tree = NULL,
                       highlight.clade = NULL,
                       fill.gradient = NULL,
+                      collapse.clade = NULL,
+                      collapse.scale = 1,
+                      collapse.fill = "gray70",
+                      collapse.label.orientation = "horizontal",
+                      collapse.label.fontface = "bold",
                       show.tip.label = TRUE,
                       size.tip.label = 4,
                       fontface.tip.label = "italic",
@@ -371,8 +418,14 @@ plotPhylo <- function(tree = NULL,
   tree_plot <- ggtree(tree, branch.length = "none", layout = layout,
                       ladderize = TRUE, linewidth = branch.width, ...)
 
+  # Extent of the tree, used to size and place the other plot elements. It is
+  # measured before clades are collapsed, because collapsing hides their nodes
+  # (x and y become NA)
+  tree_xmax <- max(tree_plot$data$x, na.rm = TRUE)
+  tree_ymax <- max(tree_plot$data$y, na.rm = TRUE)
+
   if (is.null(xlim.tree)) {
-    xlim.tree <- max(tree_plot$data$x)+5
+    xlim.tree <- tree_xmax+5
   }
 
   tree_plot <- tree_plot +
@@ -397,6 +450,88 @@ plotPhylo <- function(tree = NULL,
                      fill = fill.gradient[i], gradient = TRUE,
                      gradient.direction = "tr", alpha = 0.8) +
         geom_tree(layout = layout, linewidth = branch.width)
+    }
+  }
+
+  # Collapse clades into triangles proportional to their number of terminals
+  if (!is.null(collapse.clade)) {
+    if (!collapse.label.orientation %in% c("horizontal", "vertical")) {
+      stop("collapse.label.orientation must be 'horizontal' or 'vertical'.")
+    }
+    if (!is.numeric(collapse.scale) || length(collapse.scale) != 1 ||
+        collapse.scale <= 0 || collapse.scale > 1) {
+      stop("collapse.scale must be a single number greater than 0 and up to 1.")
+    }
+
+    collapsed <- .collapse_nodes(tree, collapse.clade)
+    collapse.fill <- rep_len(collapse.fill, nrow(collapsed))
+    named <- !is.na(collapsed$name)
+
+    # Shrink named clades first, so their triangles take less space
+    if (collapse.scale < 1) {
+      for (n in collapsed$node[named]) {
+        tree_plot <- ggtree::scaleClade(tree_plot, node = n,
+                                        scale = collapse.scale)
+      }
+    }
+
+    tree_ymax <- max(tree_plot$data$y, na.rm = TRUE)
+
+    # Position of each named clade, taken before its terminals are hidden
+    name_pos <- NULL
+    if (any(named)) {
+      name_pos <- do.call(rbind, lapply(which(named), function(i) {
+        tips <- phangorn::Descendants(tree@phylo, collapsed$node[i],
+                                      type = "tips")[[1]]
+        d <- tree_plot$data[tree_plot$data$node %in% tips, ]
+        data.frame(name = collapsed$name[i],
+                   x = max(d$x),
+                   y = mean(range(d$y)),
+                   angle = mean(range(d$angle)))
+      }))
+    }
+
+    for (i in seq_len(nrow(collapsed))) {
+      tips <- phangorn::Descendants(tree@phylo, collapsed$node[i],
+                                    type = "tips")[[1]]
+      keep <- tree_plot$data[tree_plot$data$node %in% tips,
+                             c("node", "x", "y", "branch", "angle")]
+
+      tree_plot <- ggtree::collapse(tree_plot, node = collapsed$node[i],
+                                    mode = "max", fill = collapse.fill[i],
+                                    color = collapse.fill[i],
+                                    linewidth = branch.width)
+
+      # Unnamed clades keep their terminals next to the triangle
+      if (!named[i]) {
+        rows <- match(keep$node, tree_plot$data$node)
+        tree_plot$data[rows, c("x", "y", "branch", "angle")] <- keep[, -1]
+      }
+    }
+
+    # Write the clade names in place of their terminals
+    if (!is.null(name_pos)) {
+      if (layout %in% c("circular", "fan", "inward_circular")) {
+        # Flip names on the left side of the circle so they are not upside down
+        flip <- name_pos$angle > 90 & name_pos$angle < 270
+        tree_plot <- tree_plot +
+          annotate(geom = "text", x = name_pos$x + 0.3, y = name_pos$y,
+                   label = name_pos$name,
+                   angle = ifelse(flip, name_pos$angle - 180, name_pos$angle),
+                   hjust = ifelse(flip, 1, 0), size = size.tip.label,
+                   fontface = collapse.label.fontface)
+      } else if (collapse.label.orientation == "horizontal") {
+        tree_plot <- tree_plot +
+          annotate(geom = "text", x = name_pos$x + 0.3, y = name_pos$y,
+                   label = name_pos$name, hjust = 0, size = size.tip.label,
+                   fontface = collapse.label.fontface)
+      } else {
+        tree_plot <- tree_plot +
+          annotate(geom = "text", x = name_pos$x + 0.3, y = name_pos$y,
+                   label = name_pos$name, angle = 270, vjust = 1,
+                   size = size.tip.label,
+                   fontface = collapse.label.fontface)
+      }
     }
   }
 
@@ -517,13 +652,13 @@ plotPhylo <- function(tree = NULL,
           !is.null(add.parsi.tree)) {
         if (!is_bootstrap_scale) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & prob_numeric >= 0.5 &
+            geom_text2(aes(subset = !isTip & !is.na(x) & prob_numeric >= 0.5 &
                              prob_numeric < 1,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & prob_numeric >= 50 &
+            geom_text2(aes(subset = !isTip & !is.na(x) & prob_numeric >= 50 &
                              prob_numeric < 100,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
@@ -532,12 +667,12 @@ plotPhylo <- function(tree = NULL,
       } else {
         if (!is_bootstrap_scale) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & prob >= 0.5 & prob < 1,
+            geom_text2(aes(subset = !isTip & !is.na(x) & prob >= 0.5 & prob < 1,
                            label = stringr::str_extract(prob, "[[:digit:]][.][[:digit:]][[:digit:]]")),
                        size = 3, color = "gray40", hjust = 1.5, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & prob_numeric >= 50 &
+            geom_text2(aes(subset = !isTip & !is.na(x) & prob_numeric >= 50 &
                              prob_numeric < 100,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
@@ -595,7 +730,7 @@ plotPhylo <- function(tree = NULL,
     if (length(valid_cats) > 0) {
       tree_plot <- tree_plot +
         geom_point2(
-          aes(subset = !isTip & !is.na(support_cat) & support_cat %in% valid_cats,
+          aes(subset = !isTip & !is.na(x) & !is.na(support_cat) & support_cat %in% valid_cats,
               fill = support_cat),
           size = 3,
           shape = ifelse(layout != "circular", 22, 21),
@@ -639,7 +774,7 @@ plotPhylo <- function(tree = NULL,
 
     # Control for position of gene labels
     if (is.null(ylim.gene.label)) {
-      ylim.gene.label <- (max(tree_plot$data$y)-(max(tree_plot$data$y)*25/100))-10
+      ylim.gene.label <- (tree_ymax-(tree_ymax*25/100))-10
     }
 
     tree_plot <- tree_plot +
@@ -696,7 +831,7 @@ plotPhylo <- function(tree = NULL,
                              color = "gray60",
                              fontsize = 3, linesize = 0.5, offset = 1)
 
-    if (is.null(phylogram.height)) phylogram.height = max(tree_plot$data$y)*30/100
+    if (is.null(phylogram.height)) phylogram.height = tree_ymax*30/100
 
     if (abbrev.tip.label & fancy.tip.label == FALSE) {
       temp <- abbrevGen(tiplabels = fulltree$data$label[fulltree$data$isTip])
@@ -710,9 +845,9 @@ plotPhylo <- function(tree = NULL,
     fulltree <- tree_plot + ggplot2::annotation_custom(
       ggplot2::ggplotGrob(phylogram),
       xmin = -1,
-      xmax = max(tree_plot$data$x)-(max(tree_plot$data$x)*70/100),
-      ymin = max(tree_plot$data$y)-(max(tree_plot$data$y)*phylogram.height/100),
-      ymax = max(tree_plot$data$y)-(max(tree_plot$data$y)*1/100))
+      xmax = tree_xmax-(tree_xmax*70/100),
+      ymin = tree_ymax-(tree_ymax*phylogram.height/100),
+      ymax = tree_ymax-(tree_ymax*1/100))
 
   } else {
     # Remove duplicated tree layers
@@ -729,8 +864,8 @@ plotPhylo <- function(tree = NULL,
                fullname = fullname,
                dpi = dpi,
                format = format,
-               base_height = max(tree_plot$data$y)*15/100,
-               base_width = max(tree_plot$data$x))
+               base_height = tree_ymax*15/100,
+               base_width = tree_xmax)
   }
 
   return(fulltree)
@@ -897,6 +1032,53 @@ plotPhylo <- function(tree = NULL,
 
 
 #-------------------------------------------------------------------------------
+# Auxiliary function to find the nodes of clades to be collapsed, each defined
+# by a pair of tip labels, and their optional clade names
+
+.collapse_nodes <- function(tree, collapse.clade) {
+
+  if (is.character(collapse.clade)) {
+    collapse.clade <- list(collapse.clade)
+  }
+  if (!is.list(collapse.clade)) {
+    stop("collapse.clade must be a vector of two tip labels or a list of such vectors.")
+  }
+
+  clade_names <- names(collapse.clade)
+  if (is.null(clade_names)) clade_names <- rep(NA_character_, length(collapse.clade))
+  clade_names[clade_names %in% ""] <- NA_character_
+
+  tiplabels <- tree@phylo$tip.label
+  nodes <- integer(length(collapse.clade))
+  for (i in seq_along(collapse.clade)) {
+    pair <- gsub("_", " ", collapse.clade[[i]])
+    if (length(pair) != 2) {
+      stop("Each element of collapse.clade must have exactly two tip labels.")
+    }
+    missing <- pair[!pair %in% tiplabels]
+    if (length(missing) > 0) {
+      stop("Tip labels in collapse.clade not found in the tree: ",
+           paste(missing, collapse = ", "))
+    }
+    nodes[i] <- ggtree::MRCA(tree, pair)
+  }
+
+  if (anyDuplicated(nodes)) {
+    stop("Two elements of collapse.clade define the same clade.")
+  }
+  for (i in seq_along(nodes)) {
+    inside <- phangorn::Descendants(tree@phylo, nodes[i], type = "all")
+    if (any(nodes[-i] %in% inside)) {
+      stop("Nested clades cannot be collapsed together; ",
+           "collapse only the larger clade.")
+    }
+  }
+
+  data.frame(node = nodes, name = clade_names, stringsAsFactors = FALSE)
+}
+
+
+#-------------------------------------------------------------------------------
 # Auxiliary function to save the edited tree
 .save_tree <- function(fulltree,
                        fullname,
@@ -1009,7 +1191,7 @@ plotPhylo <- function(tree = NULL,
                           breaks = cols, guide = "none")
   } else {
     tree_plot <- tree_plot %<+% tipdata +
-      geom_tiplab(offset = 0.02, size = 3,
+      geom_tiplab(offset = 0.02, size = size.tip.label,
                   fontface = fontface.tip.label, aes(color = tocolor),
                   show.legend = FALSE, ...) +
       scale_colour_manual(values = cols,

@@ -12,6 +12,11 @@ plotPhylo(tree = NULL,
           add.parsi.tree = NULL,
           highlight.clade = NULL,
           fill.gradient = NULL,
+          collapse.clade = NULL,
+          collapse.scale = 1,
+          collapse.fill = "gray70",
+          collapse.label.orientation = "horizontal",
+          collapse.label.fontface = "bold",
           show.tip.label = TRUE,
           size.tip.label = 4,
           fontface.tip.label = "italic",
@@ -65,10 +70,36 @@ a list of multiple vectors with two tip labels each to highlight their clades.}
 \item{fill.gradient}{One or more colors to highlight specific clades in the
 tree.}
 
+\item{collapse.clade}{A vector of two tip labels whose most recent common
+ancestor defines a clade to be collapsed into a triangle, or a list of
+multiple vectors with two tip labels each to collapse several clades. The
+height of each triangle is proportional to the number of terminals in the
+clade. Name the list elements to replace the terminals of a clade with a
+clade name, e.g. \code{list("Mexican clade" = c("Harpalyce_arborescens",
+"Harpalyce_sp6"))}; clades without a name keep their terminals listed next to
+the triangle. Nested clades cannot be collapsed together.}
+
+\item{collapse.scale}{A number between 0 and 1 to shrink the triangles of
+named collapsed clades (see \code{collapse.clade}) in relation to the space
+originally taken by their terminals, while keeping them proportional to the
+number of terminals. Defaults to 1, i.e. no shrinking. Clades without a name
+are not shrunk, so their terminal labels do not overlap.}
+
+\item{collapse.fill}{One or more colors to fill the triangles of collapsed
+clades, recycled along \code{collapse.clade}. Defaults to "gray70".}
+
+\item{collapse.label.orientation}{Either "horizontal" (default) or
+"vertical", the orientation of the names of collapsed clades. Only used for
+non-circular layouts; in circular layouts, names follow the angle of the
+clade.}
+
+\item{collapse.label.fontface}{The font face of the names of collapsed
+clades: "plain", "bold" (default), "italic" or "bold.italic".}
+
 \item{show.tip.label}{A logical indicating whether to show the tip labels on
 the phylogeny. Defaults to TRUE, i.e. the labels are shown.}
 
-\item{size.tip.label}{The size of tip labels; defaults to 2.}
+\item{size.tip.label}{The size of tip labels; defaults to 4.}
 
 \item{fontface.tip.label}{The font face of text, defaults to 3 (italic), others
 are 1 (plain), 2 (bold), 4 (bold.italic).}
@@ -203,6 +234,17 @@ plotPhylo(tree = Harpalyce_bayes_tree,
           dir = "results_edited_phylogeny",
           filename = "Harpalyce_edited_tree",
           format = "pdf")
+
+# Collapse clades into triangles proportional to their number of terminals:
+# the named clade is shown by its name, the unnamed one keeps its terminals
+plotPhylo(tree = Harpalyce_bayes_tree,
+          collapse.clade = list(
+            "Mexican clade" = c("Harpalyce_arborescens_Lezama19187",
+                                "Harpalyce_sp6_Nunez550"),
+            c("Poecilanthe_sp2_Saddi933", "Poecilanthe_ulei_Queiroz9584")),
+          collapse.scale = 0.5,
+          collapse.fill = c("#D53E4F", "gray70"),
+          collapse.label.orientation = "horizontal")
 }
 
 }
