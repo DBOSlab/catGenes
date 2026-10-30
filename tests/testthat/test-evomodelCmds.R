@@ -38,3 +38,38 @@ test_that("evomodelCmds handles invariant-sites-only models", {
   out <- evomodelCmds(model.vector = "HKY+I")
   expect_equal(out$raw_data$rates, "propinv")
 })
+
+test_that("evomodelCmds keeps SYM and GTR apart through their base frequencies", {
+  out <- evomodelCmds(model.vector = c("GTR+G(4)+I", "HKY+G(4)", "SYM+G(4)+I"))
+
+  expect_equal(nrow(out$grouped_commands), 3)
+  expect_true("lset applyto=(3) nst=6 rates=invgamma ngammacat=4;" %in% out$all_commands)
+  expect_true("prset applyto=(1) statefreqpr=dirichlet(1,1,1,1);" %in% out$all_commands)
+  expect_true("prset applyto=(3) statefreqpr=fixed(equal);" %in% out$all_commands)
+  expect_equal(out$grouped_commands$model, c("GTR+G(4)+I", "HKY+G(4)", "SYM+G(4)+I"))
+})
+
+test_that("evomodelCmds never fixes the substitution rates", {
+  out <- evomodelCmds(model.vector = c("TVM+G(4)", "TIM2e+I", "K80", "GTR"))
+  expect_false(any(grepl("revmatpr", out$all_commands)))
+})
+
+test_that("evomodelCmds maps models to the right MrBayes scheme and frequencies", {
+  out <- evomodelCmds(model.vector = c("JC", "F81", "K80", "HKY", "TrNe", "TrN", "TVMe", "TVM"))
+  raw <- out$raw_data
+
+  expect_equal(raw$nst, c(1, 1, 2, 2, 6, 6, 6, 6))
+  expect_equal(raw$statefreqpr == "fixed(equal)",
+               c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE))
+})
+
+test_that("evomodelCmds flags models MrBayes can only approximate", {
+  out <- evomodelCmds(model.vector = c("GTR+G(4)", "TVM+G(4)"))
+
+  expect_true(any(grepl("^\\[ Partition 2 \\(TVM\\+G\\(4\\)\\): not available in MrBayes; nst=6",
+                        out$all_commands)))
+  expect_false(any(grepl("Partition 1", out$all_commands)))
+  # TVM is run as GTR in MrBayes, so both share one group named after both models
+  expect_equal(out$grouped_commands$partitions, "1,2")
+  expect_equal(out$grouped_commands$model, "GTR+G(4) / TVM+G(4)")
+})

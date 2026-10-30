@@ -366,16 +366,15 @@ evomodelTest <- function(nexus.file.path = NULL,
     # Use the commands from evomodelCmds - they're already optimized
     # For single partition, evomodelCmds creates commands like "applyto=(1)"
     for (cmd in mrbayes_commands$all_commands) {
-      cat("  ", cmd, "\n", sep = "")
+      if (!grepl("^#", cmd)) {  # Skip comment lines from evomodelCmds
+        cat("  ", cmd, "\n", sep = "")
+      }
     }
 
     cat("  \n")
     cat("  # ================================================\n")
     cat("  # ADDITIONAL MRBAYES SETTINGS\n")
     cat("  # ================================================\n")
-    cat("  [ Base frequencies (empirical) ]\n")
-    cat("  prset applyto=(all) statefreq=dirichlet(1,1,1,1);\n")
-    cat("  \n")
     cat("  [ MCMC settings (adjust as needed) ]\n")
     cat("  mcmc ngen=10000000 samplefreq=10000 printfreq=10000\n")
     cat("       nchains=8 nruns=2 savebrlens=yes", paste0("filename=", base_name, "_Bayesian;"), "\n")
@@ -401,8 +400,8 @@ evomodelTest <- function(nexus.file.path = NULL,
         if (other_models[[criterion]] != selected_model) {
           alt_commands <- evomodelCmds(model.vector = other_models[[criterion]])
           cat("# ", criterion, ": ", other_models[[criterion]], "\n", sep = "")
-          cat("# lset:", alt_commands$lset_cmd[1], "\n")
-          cat("# prset:", alt_commands$prset_cmd[1], "\n\n")
+          cat("# lset:", alt_commands$grouped_commands$lset_cmd[1], "\n")
+          cat("# prset:", alt_commands$grouped_commands$prset_cmd[1], "\n\n")
         }
       }
     }
@@ -590,9 +589,6 @@ evomodelTest <- function(nexus.file.path = NULL,
     cat("  # ================================================\n")
     cat("  # ADDITIONAL MRBAYES SETTINGS\n")
     cat("  # ================================================\n")
-    cat("  [ Base frequencies (empirical) ]\n")
-    cat("  prset applyto=(all) statefreq=dirichlet(1,1,1,1);\n")
-    cat("  \n")
     cat("  [ Allow different rates across partitions ]\n")
     cat("  prset ratepr=variable;\n")
     cat("  \n")
@@ -671,9 +667,6 @@ evomodelTest <- function(nexus.file.path = NULL,
     "  [ ================================================ ]",
     "  [ ADDITIONAL MRBAYES SETTINGS                      ]",
     "  [ ================================================ ]",
-    "  [ Base frequencies (empirical) ]",
-    "  prset applyto=(all) statefreq=dirichlet(1,1,1,1);",
-    "",
     "  [ MCMC settings (adjust as needed) ]",
     "  mcmc ngen=10000000 samplefreq=10000 printfreq=10000",
     paste0("       nchains=8 nruns=2 savebrlens=yes filename=", alignment_name, "_Bayesian;"),
@@ -736,9 +729,6 @@ evomodelTest <- function(nexus.file.path = NULL,
     "  [ ================================================ ]",
     "  [ ADDITIONAL MRBAYES SETTINGS                      ]",
     "  [ ================================================ ]",
-    "  [ Base frequencies (empirical) ]",
-    "  prset applyto=(all) statefreq=dirichlet(1,1,1,1);",
-    "",
     "  [ Allow different rates across partitions ]",
     "  prset ratepr=variable;",
     "",
@@ -763,15 +753,31 @@ evomodelTest <- function(nexus.file.path = NULL,
 
 #' Convert model names into efficient MrBayes commands
 #'
+#' @description MrBayes only implements the substitution schemes \code{nst=1}
+#' (JC/F81), \code{nst=2} (K80/HKY) and \code{nst=6} (SYM/GTR). Each model is
+#' therefore translated into the MrBayes scheme that matches it or, for the
+#' intermediate models of \pkg{phangorn} (TrN, TPM, K81, TIM, TVM and their
+#' equal-frequency variants), into \code{nst=6}, which nests them; such
+#' partitions are flagged with a comment. Equal-frequency models (JC, K80, SYM,
+#' TrNe, TPM1/2/3, K81, TIM1e/2e/3e, TVMe) get \code{statefreqpr=fixed(equal)},
+#' and the others \code{statefreqpr=dirichlet(1,1,1,1)}, so that, e.g., SYM and
+#' GTR partitions are never merged. Substitution rates are always estimated:
+#' no \code{revmatpr=fixed(...)} is written, as that would fix the rates to the
+#' given numbers instead of linking them.
+#'
 #' @param model.vector A character vector of model names where the position/index
 #'        corresponds to the MrBayes partition number (e.g., `c("GTR+G+I", "HKY+G", "GTR+G+I")`).
 #'        Partition 1 gets the first model, Partition 2 the second, etc.
 #'
 #' @return A list with:
 #'   \itemize{
-#'     \item \code{grouped_commands}: A data frame showing partition grouping.
-#'     \item \code{all_commands}: A character vector of unique `lset` and `prset` commands.
+#'     \item \code{grouped_commands}: A data frame showing partition grouping;
+#'     partitions are grouped when they need identical MrBayes settings, and
+#'     \code{model} lists every model name in the group.
+#'     \item \code{all_commands}: A character vector of unique `lset` and
+#'     `prset` commands, preceded by bracketed comments for approximated models.
 #'     \item \code{partition_map}: A named vector showing final partition assignments.
+#'     \item \code{raw_data}: A data frame with the settings of each partition.
 #'   }
 #'
 #' @examples
@@ -779,6 +785,9 @@ evomodelTest <- function(nexus.file.path = NULL,
 #' models <- c("GTR+G(4)+I", "HKY+G(4)", "GTR+G(4)+I")
 #' cmds <- evomodelCmds(model.vector = models)
 #' cat(cmds$all_commands, sep = "\n")
+#'
+#' # SYM and GTR differ in their base frequencies, so they are not grouped
+#' cat(evomodelCmds(c("SYM+G(4)+I", "GTR+G(4)+I"))$all_commands, sep = "\n")
 #'
 #' @export
 #'
@@ -789,7 +798,23 @@ evomodelCmds <- function(model.vector) {
     stop("'model.vector' must be a non-empty character vector.")
   }
 
-  # Helper function: Parse a single model (same as before)
+  # MrBayes substitution scheme (nst), base frequencies and whether MrBayes
+  # implements the model exactly, for each phangorn::modelTest model
+  model_table <- data.frame(
+    base = c("JC", "F81", "K80", "HKY", "SYM", "GTR",
+             "TrNe", "TrN", "TPM1", "K81", "TPM1u", "K81u", "TPM2", "TPM2u",
+             "TPM3", "TPM3u", "TIM1e", "TIM1", "TIM2e", "TIM2", "TIM3e", "TIM3",
+             "TVMe", "TVM"),
+    nst = c(1, 1, 2, 2, 6, 6, rep(6, 18)),
+    equal_freq = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE,
+                   TRUE, FALSE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE,
+                   TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE,
+                   TRUE, FALSE),
+    exact = c(rep(TRUE, 6), rep(FALSE, 18)),
+    stringsAsFactors = FALSE
+  )
+
+  # Helper function: Parse a single model
   .parse_single_model <- function(model_name) {
     model <- as.character(model_name)
 
@@ -810,56 +835,30 @@ evomodelCmds <- function(model.vector) {
       rates <- "equal"
     }
 
-    # Determine nst and revmatpr based on model
+    # Exact match on the model name, so that e.g. TrNe is not read as TrN
     model_base <- gsub("\\+.*", "", model)
+    row <- match(model_base, model_table$base)
 
-    revmatpr_list <- list(
-      JC = list(nst = 1, revmatpr = "fixed(1,1,1,1,1,1)"),
-      F81 = list(nst = 1, revmatpr = "fixed(1,1,1,1,1,1)"),
-      K80 = list(nst = 2, revmatpr = "fixed(1,2,1,1,2,1)"),
-      HKY = list(nst = 2, revmatpr = "fixed(1,2,1,1,2,1)"),
-      TrN = list(nst = 6, revmatpr = "fixed(1,2,1,1,3,1)"),
-      TrNe = list(nst = 6, revmatpr = "fixed(1,2,1,1,3,1)"),
-      TIM1 = list(nst = 6, revmatpr = "fixed(1,2,3,1,2,4)"),
-      TIM1e = list(nst = 6, revmatpr = "fixed(1,2,3,1,2,4)"),
-      TIM2 = list(nst = 6, revmatpr = "fixed(1,2,1,1,3,1)"),
-      TIM2e = list(nst = 6, revmatpr = "fixed(1,2,1,1,3,1)"),
-      TIM3 = list(nst = 6, revmatpr = "fixed(1,2,1,3,2,4)"),
-      TIM3e = list(nst = 6, revmatpr = "fixed(1,2,1,3,2,4)"),
-      TPM1 = list(nst = 6, revmatpr = "fixed(1,2,3,2,1,3)"),
-      TPM1u = list(nst = 6, revmatpr = "fixed(1,2,3,2,1,3)"),
-      TPM2 = list(nst = 6, revmatpr = "fixed(1,2,3,2,1,3)"),
-      TPM2u = list(nst = 6, revmatpr = "fixed(1,2,3,2,1,3)"),
-      TPM3 = list(nst = 6, revmatpr = "fixed(1,2,1,3,2,3)"),
-      TPM3u = list(nst = 6, revmatpr = "fixed(1,2,1,3,2,3)"),
-      K81 = list(nst = 6, revmatpr = "fixed(1,2,1,1,2,1)"),
-      TVM = list(nst = 6, revmatpr = "fixed(1,2,3,4,5,2)"),
-      TVMe = list(nst = 6, revmatpr = "fixed(1,2,3,4,5,2)"),
-      SYM = list(nst = 6, revmatpr = "fixed(1,2,3,4,5,6)"),
-      GTR = list(nst = 6, revmatpr = "fixed(1,2,3,4,5,6)")
-    )
-
-    matched_model <- NULL
-    for (pattern in names(revmatpr_list)) {
-      if (grepl(paste0("^", pattern), model_base)) {
-        matched_model <- revmatpr_list[[pattern]]
-        break
-      }
+    if (is.na(row)) {
+      warning(paste("Model", model_name, "not recognized. Defaulting to GTR."))
+      row <- match("GTR", model_table$base)
     }
 
-    if (is.null(matched_model)) {
-      warning(paste("Model", model_name, "not recognized. Defaulting to GTR."))
-      matched_model <- revmatpr_list[["GTR"]]
+    statefreqpr <- if (model_table$equal_freq[row]) {
+      "fixed(equal)"
+    } else {
+      "dirichlet(1,1,1,1)"
     }
 
     # Return a unique model signature for grouping
-    return(list(
-      nst = matched_model$nst,
+    list(
+      nst = model_table$nst[row],
       rates = rates,
-      revmatpr = matched_model$revmatpr,
+      statefreqpr = statefreqpr,
+      exact = model_table$exact[row],
       model_name = model,
-      signature = paste(matched_model$nst, rates, matched_model$revmatpr, sep = "|")
-    ))
+      signature = paste(model_table$nst[row], rates, statefreqpr, sep = "|")
+    )
   }
 
   # Step 1: Parse all models
@@ -871,45 +870,53 @@ evomodelCmds <- function(model.vector) {
     model = model.vector,
     nst = sapply(parsed_list, function(x) x$nst),
     rates = sapply(parsed_list, function(x) x$rates),
-    revmatpr = sapply(parsed_list, function(x) x$revmatpr),
+    statefreqpr = sapply(parsed_list, function(x) x$statefreqpr),
+    exact = sapply(parsed_list, function(x) x$exact),
     signature = sapply(parsed_list, function(x) x$signature),
     stringsAsFactors = FALSE
   )
 
-  # Step 2: Group partitions by identical model signature
-  # Create grouping by identical model configurations
+  # Step 2: Group partitions by identical MrBayes settings
   df$group_id <- as.numeric(factor(df$signature, levels = unique(df$signature)))
 
   # Create partition groupings like "1,3" for partitions 1 and 3 with same model
-  partition_groups <- tapply(df$partition, df$group_id, function(x) {
-    if (length(x) == 1) {
-      return(as.character(x))
-    } else {
-      return(paste(x, collapse = ","))
-    }
-  })
+  partition_groups <- tapply(df$partition, df$group_id, paste, collapse = ",")
+  group_models <- tapply(df$model, df$group_id,
+                         function(x) paste(unique(x), collapse = " / "))
 
   # Get unique model configurations per group
   unique_configs <- df[!duplicated(df$group_id),
-                       c("group_id", "model", "nst", "rates", "revmatpr", "signature")]
+                       c("group_id", "nst", "rates", "statefreqpr", "signature")]
 
   # Combine into final grouped data frame
   grouped_df <- data.frame(
     partitions = unname(partition_groups),
-    unique_configs[, c("model", "nst", "rates", "revmatpr", "signature")],
+    model = unname(group_models),
+    unique_configs[, c("nst", "rates", "statefreqpr", "signature")],
     stringsAsFactors = FALSE
   )
+  rownames(grouped_df) <- NULL
 
   # Step 3: Generate MrBayes commands
   grouped_df$lset_cmd <- paste0("lset applyto=(", grouped_df$partitions, ") nst=",
                                 grouped_df$nst, " rates=", grouped_df$rates, ";")
-  grouped_df$prset_cmd <- paste0("prset applyto=(", grouped_df$partitions, ") revmatpr=",
-                                 grouped_df$revmatpr, ";")
+  grouped_df$prset_cmd <- paste0("prset applyto=(", grouped_df$partitions,
+                                 ") statefreqpr=", grouped_df$statefreqpr, ";")
+
+  # Flag models that MrBayes cannot represent exactly
+  approx <- df[!df$exact, ]
+  approx_notes <- if (nrow(approx) > 0) {
+    paste0("[ Partition ", approx$partition, " (", approx$model,
+           "): not available in MrBayes; nst=6 used, which nests it ]")
+  } else {
+    character(0)
+  }
 
   # Create clean command vector
   all_cmds <- c(
     "# Model settings from partitioned analysis",
     paste0("# Generated for ", length(model.vector), " partition(s)"),
+    approx_notes,
     grouped_df$lset_cmd,
     grouped_df$prset_cmd
   )

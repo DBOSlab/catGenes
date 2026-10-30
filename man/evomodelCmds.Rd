@@ -14,18 +14,35 @@ Partition 1 gets the first model, Partition 2 the second, etc.}
 \value{
 A list with:
 \itemize{
-\item \code{grouped_commands}: A data frame showing partition grouping.
-\item \code{all_commands}: A character vector of unique \code{lset} and \code{prset} commands.
+\item \code{grouped_commands}: A data frame showing partition grouping;
+partitions are grouped when they need identical MrBayes settings, and
+\code{model} lists every model name in the group.
+\item \code{all_commands}: A character vector of unique \code{lset} and
+\code{prset} commands, preceded by bracketed comments for approximated models.
 \item \code{partition_map}: A named vector showing final partition assignments.
+\item \code{raw_data}: A data frame with the settings of each partition.
 }
 }
 \description{
-Convert model names into efficient MrBayes commands
+MrBayes only implements the substitution schemes \code{nst=1}
+(JC/F81), \code{nst=2} (K80/HKY) and \code{nst=6} (SYM/GTR). Each model is
+therefore translated into the MrBayes scheme that matches it or, for the
+intermediate models of \pkg{phangorn} (TrN, TPM, K81, TIM, TVM and their
+equal-frequency variants), into \code{nst=6}, which nests them; such
+partitions are flagged with a comment. Equal-frequency models (JC, K80, SYM,
+TrNe, TPM1/2/3, K81, TIM1e/2e/3e, TVMe) get \code{statefreqpr=fixed(equal)},
+and the others \code{statefreqpr=dirichlet(1,1,1,1)}, so that, e.g., SYM and
+GTR partitions are never merged. Substitution rates are always estimated:
+no \code{revmatpr=fixed(...)} is written, as that would fix the rates to the
+given numbers instead of linking them.
 }
 \examples{
 # Partitions 1 and 3 share the same model, partition 2 is different
 models <- c("GTR+G(4)+I", "HKY+G(4)", "GTR+G(4)+I")
 cmds <- evomodelCmds(model.vector = models)
 cat(cmds$all_commands, sep = "\n")
+
+# SYM and GTR differ in their base frequencies, so they are not grouped
+cat(evomodelCmds(c("SYM+G(4)+I", "GTR+G(4)+I"))$all_commands, sep = "\n")
 
 }
