@@ -94,11 +94,12 @@ test_that("mrbayesStop errors when res is not a list", {
   calls <- 0
   list(
     is_alive = function() { calls <<- calls + 1; calls < 2 },
-    read_output_lines = function() character(0),
-    read_error_lines = function() character(0),
     get_exit_status = function() 0L,
     get_pid = function() 1234L,
     signal = function(sig) invisible(TRUE),
+    interrupt = function() invisible(TRUE),
+    write_input = function(str) invisible(TRUE),
+    wait = function(timeout) invisible(NULL),
     kill = function() invisible(TRUE)
   )
 }
@@ -159,4 +160,80 @@ test_that("mrbayesStop calls the stop handle with the expected grace flag", {
 
   mrbayesStop(fake_res, force = TRUE)
   expect_false(called_with)
+})
+
+test_that("mrbayesRun errors on non-ASCII characters and reports the lines", {
+  nex <- withr::local_tempfile(fileext = ".nex")
+  writeLines(c("#NEXUS", "[Gonz\u00e1lez 123]", "begin mrbayes;", "end;"), nex, useBytes = TRUE)
+  mrbayes_dir <- .make_fake_mb_dir(environment())
+
+  expect_error(mrbayesRun(nex, mrbayes.dir = mrbayes_dir, quiet = TRUE),
+               "non-ASCII.*\nLines: 2\n")
+})
+
+# The tests below start a real child process: a small shell script standing in
+# for "mb", so they run without MrBayes but exercise the actual processx wiring.
+.make_script_mb_dir <- function(script, envir = parent.frame()) {
+  mrbayes_dir <- withr::local_tempdir(.local_envir = envir)
+  exe <- file.path(mrbayes_dir, "mb")
+  writeLines(c("#!/bin/sh", script), exe)
+  Sys.chmod(exe, "755")
+  mrbayes_dir
+}
+
+test_that("background runs are not blocked by large output and poll() works", {
+  skip_on_os("windows")
+  skip_if_not_installed("processx")
+  nex <- .make_fake_nexus(environment())
+  run_dir <- withr::local_tempdir()
+  # ~400 KB of output: far more than an OS pipe buffer (~64 KB)
+  mrbayes_dir <- .make_script_mb_dir(
+    "i=0; while [ $i -lt 8000 ]; do echo \"generation $i -- [-34564.957] (-34636.456) ..\"; i=$((i+1)); done"
+  )
+
+  res <- mrbayesRun(nex, mrbayes.dir = mrbayes_dir, run.dir = run_dir,
+                    quiet = TRUE, live = FALSE, background = TRUE)
+  res$proc$wait(20000)
+
+  expect_false(res$proc$is_alive())
+  expect_equal(res$proc$get_exit_status(), 0L)
+  expect_length(readLines(res$stdout), 8000)
+  expect_no_error(res$poll())
+})
+
+test_that("foreground runs record output in the stdout log", {
+  skip_on_os("windows")
+  skip_if_not_installed("processx")
+  nex <- .make_fake_nexus(environment())
+  run_dir <- withr::local_tempdir()
+  mrbayes_dir <- .make_script_mb_dir("echo hello from mb; echo oops >&2")
+
+  res <- mrbayesRun(nex, mrbayes.dir = mrbayes_dir, run.dir = run_dir,
+                    quiet = TRUE, live = FALSE)
+
+  expect_equal(res$exit_status, 0L)
+  expect_equal(readLines(res$stdout), "hello from mb")
+  expect_equal(readLines(res$stderr), "oops")
+})
+
+test_that("graceful stop interrupts the run and answers MrBayes's prompt", {
+  skip_on_os("windows")
+  skip_if_not_installed("processx")
+  nex <- .make_fake_nexus(environment())
+  run_dir <- withr::local_tempdir()
+  # Mimics MrBayes: on SIGINT ask for confirmation on stdin, stop only on "y"
+  mrbayes_dir <- .make_script_mb_dir(c(
+    "trap 'echo \"Do you really want to stop the run (y/n)?\"; read a; [ \"$a\" = y ] && { echo stopped; exit 0; }' INT",
+    "while true; do sleep 0.1; done"
+  ))
+
+  res <- mrbayesRun(nex, mrbayes.dir = mrbayes_dir, run.dir = run_dir,
+                    quiet = TRUE, live = FALSE, background = TRUE)
+  Sys.sleep(0.5)
+
+  expect_true(mrbayesStop(res))
+  expect_false(res$proc$is_alive())
+  expect_equal(res$proc$get_exit_status(), 0L)
+  expect_true("stopped" %in% readLines(res$stdout))
+  expect_false(mrbayesStop(res))
 })

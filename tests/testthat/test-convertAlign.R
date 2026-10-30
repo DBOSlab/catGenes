@@ -138,3 +138,21 @@ test_that("convertAlign ignores sub-directories and warns when nothing is conver
     "nothing was saved"
   )
 })
+
+test_that("convertAlign skips binary and non-alignment files in the input folder", {
+  indir <- withr::local_tempdir()
+  outdir <- withr::local_tempdir()
+
+  df <- fixture_seq_dframe()
+  fastadframe(df, file = file.path(indir, "gene1.fasta"))
+  writeBin(as.raw(c(0x50, 0x4b, 0x03, 0x04, 0x88, 0x39, 0x4c, 0xec, 0x00, 0xff, 0xfd, 0x7c)),
+           file.path(indir, "table.xlsx"))
+  writeLines(c("species,locus", "A,matK"), file.path(indir, "notes.csv"))
+
+  expect_message(
+    convertAlign(filepath = indir, format = "NEXUS", verbose = FALSE, dir = outdir),
+    "not a text alignment|not a NEXUS, FASTA or PHYLIP")
+
+  foldername <- file.path(outdir, format(Sys.time(), "%d%b%Y"))
+  expect_equal(list.files(foldername), "gene1.nex")
+})

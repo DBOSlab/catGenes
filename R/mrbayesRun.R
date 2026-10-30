@@ -7,7 +7,7 @@
 #' [MrBayes](https://nbisweden.github.io/MrBayes/) directly from R/RStudio using a
 #' pre-configured NEXUS file that already contains a complete \code{begin mrbayes;}
 #' command block. The function copies (or moves) the NEXUS file to a dedicated run
-#' directory, launches MrBayes, and captures the program output.
+#' directory, launches MrBayes, and records the program output in log files.
 #'
 #' When \pkg{processx} is installed and \code{use.processx = TRUE}, output can be
 #' streamed live to the R console and the returned object includes a \code{stop()}
@@ -19,16 +19,35 @@
 #' printed, but stopping is interactive (e.g., Esc in RStudio).
 #'
 #' @details
+#' Before starting, the NEXUS file is checked for non-ASCII characters (e.g.,
+#' accented letters in collector names inside \code{[...]} comments). MrBayes cannot read them and stops with errors such as
+#' \emph{"Reached end of file while in comment"}, so the function stops early and
+#' reports the offending lines.
+#'
 #' Output capture:
-#' - \code{stdout}: file path where standard output is recorded.
-#' - \code{stderr}: file path where errors/warnings are recorded.
-#' The function runs MrBayes in \code{run.dir}, so all MrBayes output files
-#' (e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
+#' - \code{stdout}: file \code{mrbayes_stdout.txt} in \code{run.dir}, where the
+#'   MrBayes screen output is recorded.
+#' - \code{stderr}: file \code{mrbayes_stderr.txt} in \code{run.dir}, where errors
+#'   and warnings are recorded.
+#'
+#' With \pkg{processx}, MrBayes writes directly to these files, so they grow while
+#' the analysis runs, also in background mode, whether or not \code{poll()} is
+#' called. The function runs MrBayes in \code{run.dir}, so all MrBayes output files
+#' (e.g., \code{.p}, \code{.t}, \code{.con.tre}, named after the \code{filename}
+#' option of the \code{mcmc} command or, if absent, after the NEXUS file) are
+#' written there.
 #'
 #' Stopping the run:
-#' - With \pkg{processx} + \code{background = TRUE}: call \code{mrbayesStop(res)} or \code{res$stop()}.
+#' - With \pkg{processx} + \code{background = TRUE}: call \code{mrbayesStop(res)}
+#'   or \code{res$stop()}. This interrupts MrBayes and confirms the stop, so the
+#'   samples written so far are kept. Use \code{mrbayesStop(res, force = TRUE)} to
+#'   kill the process immediately.
 #' - With \pkg{processx} + \code{background = FALSE}: stop interactively (Esc) because the call blocks.
 #' - Without \pkg{processx}: stop interactively (Esc in RStudio).
+#'
+#' Avoid placing \code{run.dir} inside folders synchronized by cloud services
+#' (e.g., iCloud Drive, Dropbox), which may lock or offload files while MrBayes is
+#' writing them during long runs.
 #'
 #' @usage
 #' mrbayesRun(nexus.file,
@@ -51,6 +70,8 @@
 #' \code{file.path(mrbayes.dir, "bin")}. Typical values for \code{mrbayes.dir}:
 #' - macOS (Intel, Homebrew): \code{"/usr/local/bin"}
 #' - macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
+#' - macOS/Linux (compiled from source): the \code{src} folder of the MrBayes
+#'   source tree, e.g. \code{"~/MrBayes/src"}
 #' - macOS/Linux (local install): \code{"~/.local/bin"} (use \code{path.expand("~/.local/bin")})
 #' - Windows (typical): \code{"C:/Program Files/MrBayes"} or a folder containing \code{mb.exe}
 #'
@@ -67,7 +88,7 @@
 #'
 #' @param live
 #' Logical. If \code{TRUE}, prints MrBayes output to the R console (default: \code{TRUE}).
-#' Live streaming is most reliable with \pkg{processx}.
+#' In background mode, output is printed only when \code{poll()} is called.
 #'
 #' @param use.processx
 #' Logical. If \code{TRUE} (default), uses \pkg{processx} when installed to provide
@@ -79,11 +100,13 @@
 #' \code{stop()} to terminate the run. Requires \pkg{processx}. Default: \code{FALSE}.
 #'
 #' @return
-#' A list with (at minimum) \code{exe_path}, \code{run.dir}, \code{nexus_path},
+#' A list with (at minimum) \code{exe_path}, \code{run_dir}, \code{nexus_path},
 #' \code{stdout}, \code{stderr}, \code{exit_status}, and \code{error}. When
 #' \pkg{processx} is used, the list additionally includes \code{proc} (a
 #' \pkg{processx} process object) and \code{stop}. When \code{background = TRUE},
-#' the list also includes \code{poll}.
+#' the list also includes \code{poll}, and \code{exit_status} is \code{NA} (use
+#' \code{res$proc$is_alive()} and \code{res$proc$get_exit_status()} to follow the
+#' run).
 #'
 #' @examples
 #' \dontrun{
@@ -91,8 +114,9 @@
 #' res <- mrbayesRun("analysis.nex",
 #'                   mrbayes.dir = "/usr/local/bin",
 #'                   background = TRUE)
-#' res$poll()          # print new output
-#' mrbayesStop(res)    # graceful stop
+#' res$poll()             # print new output
+#' res$proc$is_alive()    # still running?
+#' mrbayesStop(res)       # graceful stop
 #' mrbayesStop(res, TRUE) # force kill
 #'
 #' # Foreground mode (blocking): stop with Esc in RStudio
@@ -125,6 +149,19 @@ mrbayesRun <- function(nexus.file,
   if (!file.exists(nexus.file)) stop("nexus.file does not exist: ", nexus.file)
   nexus.file <- normalizePath(nexus.file, winslash = "/", mustWork = TRUE)
 
+  # MrBayes cannot parse non-ASCII bytes (e.g. accented letters in comments)
+  nex_bytes <- readBin(nexus.file, "raw", n = file.size(nexus.file))
+  if (any(nex_bytes > as.raw(0x7F))) {
+    nex_lines <- readLines(nexus.file, warn = FALSE, encoding = "bytes")
+    bad <- which(vapply(nex_lines, function(l) any(charToRaw(l) > as.raw(0x7F)),
+                        logical(1), USE.NAMES = FALSE))
+    stop("nexus.file contains non-ASCII characters (e.g., accented letters), ",
+         "which MrBayes cannot read.\n",
+         "Lines: ", paste(utils::head(bad, 20), collapse = ", "),
+         if (length(bad) > 20) ", ..." else "", "\n",
+         "Replace them with plain ASCII (e.g., \u00e1 -> a) and run again.")
+  }
+
   if (is.null(mrbayes.dir) || !nzchar(mrbayes.dir)) stop("mrbayes.dir is required.")
   if (!dir.exists(mrbayes.dir)) stop("mrbayes.dir does not exist: ", mrbayes.dir)
   mrbayes.dir <- normalizePath(mrbayes.dir, winslash = "/", mustWork = TRUE)
@@ -149,12 +186,14 @@ mrbayesRun <- function(nexus.file,
   run.dir <- normalizePath(run.dir, winslash = "/", mustWork = TRUE)
 
   dest_nexus <- file.path(run.dir, basename(nexus.file))
-  if (copy.mode == "copy") {
-    ok <- file.copy(nexus.file, dest_nexus, overwrite = TRUE)
-    if (!ok) stop("Failed to copy nexus.file into run.dir.")
-  } else {
-    ok <- file.rename(nexus.file, dest_nexus)
-    if (!ok) stop("Failed to move nexus.file into run.dir.")
+  if (!identical(dest_nexus, nexus.file)) {
+    if (copy.mode == "copy") {
+      ok <- file.copy(nexus.file, dest_nexus, overwrite = TRUE)
+      if (!ok) stop("Failed to copy nexus.file into run.dir.")
+    } else {
+      ok <- file.rename(nexus.file, dest_nexus)
+      if (!ok) stop("Failed to move nexus.file into run.dir.")
+    }
   }
 
   stdout_file <- file.path(run.dir, "mrbayes_stdout.txt")
@@ -175,54 +214,50 @@ mrbayesRun <- function(nexus.file,
 
   # ---- processx path (supports background + programmatic stop) ----
   if (want_processx) {
-    out_con <- file(stdout_file, open = "ab")
-    err_con <- file(stderr_file, open = "ab")
-    on.exit({
-      try(close(out_con), silent = TRUE)
-      try(close(err_con), silent = TRUE)
-    }, add = TRUE)
-
-    buf_write <- function(con, txt) {
-      if (length(txt) == 0) return(invisible(NULL))
-      if (is.character(txt) && length(txt) > 1) txt <- paste(txt, collapse = "\n")
-      if (!is.character(txt)) txt <- as.character(txt)
-      if (!nzchar(txt)) return(invisible(NULL))
-      writeChar(paste0(txt, "\n"), con, eos = NULL, useBytes = TRUE)
-      flush(con)
-      invisible(NULL)
-    }
-
+    # MrBayes writes straight to the log files, so its output never fills a pipe
+    # (which would block the run) and the logs grow even if poll() is never called.
+    # stdin stays open so that stop() can answer MrBayes's
+    # "Do you really want to stop the run (y/n)?" prompt.
     proc <- processx::process$new(
       command = exe_path,
       args = c(basename(dest_nexus)),
       wd = run.dir,
-      stdout = "|",
-      stderr = "|",
+      stdin = "|",
+      stdout = stdout_file,
+      stderr = stderr_file,
       cleanup = TRUE
     )
 
     stop_fun <- function(grace = TRUE) {
       if (!proc$is_alive()) return(invisible(FALSE))
       if (grace) {
-        if (identical(.Platform$OS.type, "windows")) proc$signal(15) else proc$signal(2)
+        proc$interrupt()
+        try(proc$write_input("y\n"), silent = TRUE)
+        proc$wait(10000)
+        if (proc$is_alive()) proc$kill()
       } else {
         proc$kill()
       }
       invisible(TRUE)
     }
 
-    poll_fun <- function() {
-      out <- proc$read_output_lines()
-      if (length(out)) {
-        if (isTRUE(live)) cat(paste0(out, "\n"))
-        buf_write(out_con, out)
-      }
+    read_pos <- c(out = 0, err = 0)
+    read_new <- function(path, key) {
+      size <- file.size(path)
+      if (is.na(size) || size <= read_pos[[key]]) return(character(0))
+      con <- file(path, open = "rb")
+      on.exit(close(con))
+      seek(con, read_pos[[key]])
+      txt <- rawToChar(readBin(con, "raw", n = size - read_pos[[key]]))
+      read_pos[[key]] <<- size
+      txt
+    }
 
-      errl <- proc$read_error_lines()
-      if (length(errl)) {
-        if (isTRUE(live)) cat(paste0(errl, "\n"), file = stderr())
-        buf_write(err_con, errl)
-      }
+    poll_fun <- function() {
+      out <- read_new(stdout_file, "out")
+      if (length(out) && isTRUE(live)) cat(out)
+      errl <- read_new(stderr_file, "err")
+      if (length(errl) && isTRUE(live)) cat(errl, file = stderr())
       invisible(NULL)
     }
 
@@ -256,7 +291,7 @@ mrbayesRun <- function(nexus.file,
     tryCatch({
       while (proc$is_alive()) {
         poll_fun()
-        Sys.sleep(0.05)
+        Sys.sleep(0.2)
       }
       poll_fun()
       exit_status <- proc$get_exit_status()
@@ -317,6 +352,11 @@ mrbayesRun <- function(nexus.file,
 #' For programmatic stopping, the run must have been started with \pkg{processx}
 #' (i.e., \code{use.processx = TRUE}) and, for practical "stop anytime" control,
 #' \code{background = TRUE}.
+#'
+#' A graceful stop (\code{force = FALSE}) interrupts MrBayes and answers "yes" to
+#' its \emph{"Do you really want to stop the run (y/n)?"} prompt, so the run ends
+#' cleanly and the samples written so far are kept. If MrBayes has not exited
+#' after 10 seconds, it is killed.
 #'
 #' @param res A result object returned by \code{\link{mrbayesRun}}.
 #' @param force Logical. If \code{FALSE} (default), requests a graceful stop.

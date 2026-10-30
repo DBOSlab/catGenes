@@ -20,4 +20,9 @@ Convenience wrapper to stop a MrBayes run returned by \code{\link{mrbayesRun}}.
 For programmatic stopping, the run must have been started with \pkg{processx}
 (i.e., \code{use.processx = TRUE}) and, for practical "stop anytime" control,
 \code{background = TRUE}.
+
+A graceful stop (\code{force = FALSE}) interrupts MrBayes and answers "yes" to
+its \emph{"Do you really want to stop the run (y/n)?"} prompt, so the run ends
+cleanly and the samples written so far are kept. If MrBayes has not exited
+after 10 seconds, it is killed.
 }

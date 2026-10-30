@@ -95,7 +95,14 @@ convertAlign <- function(filepath = NULL,
   for (i in seq_along(inputfiles)) {
 
     infile <- file.path(filepath, inputfiles[i])
-    temp <- readLines(infile, warn = FALSE)
+    # Non-text files (e.g. .xlsx, .RData) in the folder are skipped, not parsed
+    temp <- tryCatch(suppressWarnings(readLines(infile, warn = FALSE)),
+                     error = function(e) NULL)
+    if (is.null(temp) || !all(validUTF8(temp))) {
+      message("The input file ", inputfiles[i],
+              " is not a text alignment and was skipped.\n")
+      next
+    }
     temp <- sub("^\ufeff", "", temp)
     temp <- temp[nzchar(trimws(temp))]
     if (length(temp) == 0) {
@@ -103,6 +110,12 @@ convertAlign <- function(filepath = NULL,
       next
     }
     firstchar <- substr(trimws(temp[1]), 1, 1)
+    if (!firstchar %in% c("#", ">") &&
+        !grepl("^\\s*[0-9]+\\s+[0-9]+", temp[1])) {
+      message("The input file ", inputfiles[i],
+              " is not a NEXUS, FASTA or PHYLIP alignment and was skipped.\n")
+      next
+    }
 
     if (firstchar == "#") {
       if (format == "NEXUS") {

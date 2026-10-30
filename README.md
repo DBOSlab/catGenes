@@ -252,9 +252,14 @@ evomodelTest(
 
 ``` r
 res <- mrbayesRun(
-  nexus_file = "Vataireoids.nex",
-  mrbayes_dir = "/path/to/mrbayes"
+  nexus.file = "Vataireoids.nex",
+  mrbayes.dir = "/path/to/mrbayes",
+  run.dir = "~/mrbayes_runs/Vataireoids",
+  background = TRUE
 )
+
+res$poll()          # print new MrBayes output
+mrbayesStop(res)    # stop the run, keeping the samples written so far
 ```
 
 ### Plot phylogenetic trees

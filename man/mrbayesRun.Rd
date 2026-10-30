@@ -24,6 +24,8 @@ executable is not found directly in \code{mrbayes.dir}, the function also checks
 \itemize{
 \item macOS (Intel, Homebrew): \code{"/usr/local/bin"}
 \item macOS (Apple Silicon, Homebrew): \code{"/opt/homebrew/bin"}
+\item macOS/Linux (compiled from source): the \code{src} folder of the MrBayes
+source tree, e.g. \code{"~/MrBayes/src"}
 \item macOS/Linux (local install): \code{"~/.local/bin"} (use \code{path.expand("~/.local/bin")})
 \item Windows (typical): \code{"C:/Program Files/MrBayes"} or a folder containing \code{mb.exe}
 }}
@@ -37,7 +39,7 @@ is copied to \code{run.dir} or moved there before running MrBayes.}
 \item{quiet}{Logical. If \code{TRUE}, suppresses most informational messages (default: \code{FALSE}).}
 
 \item{live}{Logical. If \code{TRUE}, prints MrBayes output to the R console (default: \code{TRUE}).
-Live streaming is most reliable with \pkg{processx}.}
+In background mode, output is printed only when \code{poll()} is called.}
 
 \item{use.processx}{Logical. If \code{TRUE} (default), uses \pkg{processx} when installed to provide
 robust output streaming and a programmatic stop handle.}
@@ -47,18 +49,20 @@ The returned object includes \code{poll()} to print new output on demand and
 \code{stop()} to terminate the run. Requires \pkg{processx}. Default: \code{FALSE}.}
 }
 \value{
-A list with (at minimum) \code{exe_path}, \code{run.dir}, \code{nexus_path},
+A list with (at minimum) \code{exe_path}, \code{run_dir}, \code{nexus_path},
 \code{stdout}, \code{stderr}, \code{exit_status}, and \code{error}. When
 \pkg{processx} is used, the list additionally includes \code{proc} (a
 \pkg{processx} process object) and \code{stop}. When \code{background = TRUE},
-the list also includes \code{poll}.
+the list also includes \code{poll}, and \code{exit_status} is \code{NA} (use
+\code{res$proc$is_alive()} and \code{res$proc$get_exit_status()} to follow the
+run).
 }
 \description{
 Run a Bayesian phylogenetic analysis in
 \href{https://nbisweden.github.io/MrBayes/}{MrBayes} directly from R/RStudio using a
 pre-configured NEXUS file that already contains a complete \code{begin mrbayes;}
 command block. The function copies (or moves) the NEXUS file to a dedicated run
-directory, launches MrBayes, and captures the program output.
+directory, launches MrBayes, and records the program output in log files.
 
 When \pkg{processx} is installed and \code{use.processx = TRUE}, output can be
 streamed live to the R console and the returned object includes a \code{stop()}
@@ -70,20 +74,39 @@ Without \pkg{processx}, the analysis can still be run and live output can be
 printed, but stopping is interactive (e.g., Esc in RStudio).
 }
 \details{
+Before starting, the NEXUS file is checked for non-ASCII characters (e.g.,
+accented letters in collector names inside \code{[...]} comments). MrBayes cannot read them and stops with errors such as
+\emph{"Reached end of file while in comment"}, so the function stops early and
+reports the offending lines.
+
 Output capture:
 \itemize{
-\item \code{stdout}: file path where standard output is recorded.
-\item \code{stderr}: file path where errors/warnings are recorded.
-The function runs MrBayes in \code{run.dir}, so all MrBayes output files
-(e.g., \code{.p}, \code{.t}, \code{.con.tre}) will be written there.
+\item \code{stdout}: file \code{mrbayes_stdout.txt} in \code{run.dir}, where the
+MrBayes screen output is recorded.
+\item \code{stderr}: file \code{mrbayes_stderr.txt} in \code{run.dir}, where errors
+and warnings are recorded.
 }
+
+With \pkg{processx}, MrBayes writes directly to these files, so they grow while
+the analysis runs, also in background mode, whether or not \code{poll()} is
+called. The function runs MrBayes in \code{run.dir}, so all MrBayes output files
+(e.g., \code{.p}, \code{.t}, \code{.con.tre}, named after the \code{filename}
+option of the \code{mcmc} command or, if absent, after the NEXUS file) are
+written there.
 
 Stopping the run:
 \itemize{
-\item With \pkg{processx} + \code{background = TRUE}: call \code{mrbayesStop(res)} or \code{res$stop()}.
+\item With \pkg{processx} + \code{background = TRUE}: call \code{mrbayesStop(res)}
+or \code{res$stop()}. This interrupts MrBayes and confirms the stop, so the
+samples written so far are kept. Use \code{mrbayesStop(res, force = TRUE)} to
+kill the process immediately.
 \item With \pkg{processx} + \code{background = FALSE}: stop interactively (Esc) because the call blocks.
 \item Without \pkg{processx}: stop interactively (Esc in RStudio).
 }
+
+Avoid placing \code{run.dir} inside folders synchronized by cloud services
+(e.g., iCloud Drive, Dropbox), which may lock or offload files while MrBayes is
+writing them during long runs.
 }
 \examples{
 \dontrun{
@@ -91,8 +114,9 @@ Stopping the run:
 res <- mrbayesRun("analysis.nex",
                   mrbayes.dir = "/usr/local/bin",
                   background = TRUE)
-res$poll()          # print new output
-mrbayesStop(res)    # graceful stop
+res$poll()             # print new output
+res$proc$is_alive()    # still running?
+mrbayesStop(res)       # graceful stop
 mrbayesStop(res, TRUE) # force kill
 
 # Foreground mode (blocking): stop with Esc in RStudio
