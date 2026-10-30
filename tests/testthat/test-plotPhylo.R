@@ -355,3 +355,61 @@ test_that("collapsing clades keeps the saved figure size and side phylogram plac
   expect_false(anyNA(inset(saved[[2]]$fulltree)))
   expect_equal(inset(saved[[2]]$fulltree), inset(saved[[1]]$fulltree))
 })
+
+test_that("decimal supports with an unsupported root stay on the 0-1 scale", {
+  # RAxML-NG support trees (e.g. TBE) store supports as proportions and leave
+  # the root without a label
+  tr <- ape::read.tree(text = "((A:1,B:1)0.962714:1,((C:1,D:1)0.706500:1,E:1)0.891222:1);")
+  tr <- treeio::as.treedata(tr)
+
+  p <- plotPhylo(tree = tr, save = FALSE)
+  d <- p$data[!p$data$isTip, ]
+
+  expect_equal(sort(d$prob_numeric), c(0.7065, 0.891222, 0.962714, 1))
+  expect_setequal(as.character(d$support_cat),
+                  c(">= 1.0", "0.96 - 0.99", "0.86 - 0.95", "0.70 - 0.85"))
+})
+
+test_that("bootstrap supports with an unsupported root stay on the 0-100 scale", {
+  tr <- ape::read.tree(text = "((A:1,B:1)96:1,((C:1,D:1)72:1,E:1)88:1);")
+  tr <- treeio::as.treedata(tr)
+
+  p <- plotPhylo(tree = tr, save = FALSE)
+  d <- p$data[!p$data$isTip, ]
+
+  expect_equal(sort(d$prob_numeric), c(72, 88, 96, 100))
+  expect_setequal(as.character(d$support_cat), c("100", "96 - 99", "86 - 95", "70 - 85"))
+})
+
+test_that(".support_numeric reads combined and non-numeric supports", {
+  expect_equal(catGenes:::.support_numeric(c("0.95/85/90", "100", "-", "", NA)),
+               c(0.95, 100, NA, NA, NA))
+})
+
+test_that("support categories match their legend labels at the boundaries", {
+  cat_of <- function(newick) {
+    p <- plotPhylo(tree = treeio::as.treedata(ape::read.tree(text = newick)),
+                   save = FALSE)
+    d <- p$data[!p$data$isTip & !is.na(p$data$support_cat), ]
+    setNames(as.character(d$support_cat), as.character(d$prob_numeric))
+  }
+
+  pp <- cat_of("(((((A:1,B:1)0.995:1,C:1)0.95:1,D:1)0.85:1,E:1)0.70:1,(F:1,G:1)0.69:1);")
+  expect_equal(unname(pp[c("0.995", "0.95", "0.85", "0.7", "0.69")]),
+               c("0.96 - 0.99", "0.86 - 0.95", "0.70 - 0.85", "0.70 - 0.85", "< 0.70"))
+
+  bs <- cat_of("(((((A:1,B:1)99.6:1,C:1)95:1,D:1)85:1,E:1)70:1,(F:1,G:1)69:1);")
+  expect_equal(unname(bs[c("99.6", "95", "85", "70", "69")]),
+               c("96 - 99", "86 - 95", "70 - 85", "70 - 85", "< 70"))
+})
+
+test_that("decimal support labels show two decimals, truncated like their category", {
+  tr <- treeio::as.treedata(ape::read.tree(text = "(((A:1,B:1)0.996:1,C:1)0.9:1,D:1);"))
+  p <- plotPhylo(tree = tr, save = FALSE)
+
+  text_layers <- which(vapply(p$layers, function(l) inherits(l$geom, "GeomText"),
+                              logical(1)))
+  labs <- unlist(lapply(text_layers, function(i) ggplot2::layer_data(p, i)$label))
+  expect_true(all(c("0.99", "0.90") %in% labs))
+  expect_false(any(c("1.00", "0.9") %in% labs))
+})

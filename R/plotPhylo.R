@@ -331,8 +331,14 @@ plotPhylo <- function(tree = NULL,
       tree@data$prob <- NA_real_   # Create new column if empty
     }
     if ("node.label" %in% names(tree@phylo)) {
+      # Nodes without support (usually the root) get the maximum support of
+      # the tree's own scale: 1 for proportions (e.g. RAxML-NG TBE or
+      # posterior probabilities) and 100 for bootstrap percentages
       tf <- tree@phylo$node.label %in% ""
-      if (any(tf)) tree@phylo$node.label[tf] <- 100
+      if (any(tf)) {
+        supports <- .support_numeric(tree@phylo$node.label[!tf])
+        tree@phylo$node.label[tf] <- if (any(supports > 1, na.rm = TRUE)) 100 else 1
+      }
       tf <- tree@data$prob %in% "Root"
       if (any(tf)) tree@data$prob[tf] <- ""
 
@@ -615,12 +621,7 @@ plotPhylo <- function(tree = NULL,
 
     # Extract the first support value from combined values such as "0.95/85/90".
     # Non-numeric entries (e.g. "-", "", "Root") are treated as missing values.
-    prob_chr <- as.character(tree_plot$data$prob)
-    prob_chr <- sub("/.*$", "", prob_chr)
-
-    tree_plot$data$prob_numeric <- suppressWarnings(
-      as.numeric(prob_chr)
-    )
+    tree_plot$data$prob_numeric <- .support_numeric(tree_plot$data$prob)
 
     # Determine whether supports are on a posterior-probability (0-1)
     # or bootstrap (0-100) scale.
@@ -628,6 +629,11 @@ plotPhylo <- function(tree = NULL,
       tree_plot$data$prob_numeric > 1,
       na.rm = TRUE
     )
+
+    # Supports as shown on the branches (two decimals or whole percentages),
+    # so that each node falls in the legend category its label reads
+    tree_plot$data$support_level <- .support_level(tree_plot$data$prob_numeric,
+                                                   is_bootstrap_scale)
 
     # Check if all support values are 1 or 100 (meaning no variation to show as numbers)
     all_max_support <- FALSE
@@ -652,14 +658,14 @@ plotPhylo <- function(tree = NULL,
           !is.null(add.parsi.tree)) {
         if (!is_bootstrap_scale) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & !is.na(x) & prob_numeric >= 0.5 &
-                             prob_numeric < 1,
+            geom_text2(aes(subset = !isTip & !is.na(x) & support_level >= 0.5 &
+                             support_level < 1,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & !is.na(x) & prob_numeric >= 50 &
-                             prob_numeric < 100,
+            geom_text2(aes(subset = !isTip & !is.na(x) & support_level >= 50 &
+                             support_level < 100,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         }
@@ -667,13 +673,14 @@ plotPhylo <- function(tree = NULL,
       } else {
         if (!is_bootstrap_scale) {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & !is.na(x) & prob >= 0.5 & prob < 1,
-                           label = stringr::str_extract(prob, "[[:digit:]][.][[:digit:]][[:digit:]]")),
+            geom_text2(aes(subset = !isTip & !is.na(x) & support_level >= 0.5 &
+                             support_level < 1,
+                           label = sprintf("%.2f", support_level)),
                        size = 3, color = "gray40", hjust = 1.5, vjust = 1.5)
         } else {
           tree_plot <- tree_plot +
-            geom_text2(aes(subset = !isTip & !is.na(x) & prob_numeric >= 50 &
-                             prob_numeric < 100,
+            geom_text2(aes(subset = !isTip & !is.na(x) & support_level >= 50 &
+                             support_level < 100,
                            label = prob),
                        size = 3, color = "gray40", hjust = 1.2, vjust = 1.5)
         }
@@ -684,8 +691,8 @@ plotPhylo <- function(tree = NULL,
     if (!is_bootstrap_scale) {
       # For posterior probabilities (0-1 scale)
       support_cat <- cut(
-        tree_plot$data$prob_numeric,
-        breaks = c(-Inf, 0.70, 0.85, 0.95, 0.99, 1),
+        tree_plot$data$support_level,
+        breaks = c(-Inf, 0.695, 0.855, 0.955, 0.995, Inf),
         labels = c("< 0.70", "0.70 - 0.85", "0.86 - 0.95", "0.96 - 0.99", ">= 1.0"),
         right = FALSE,
         include.lowest = TRUE
@@ -700,8 +707,8 @@ plotPhylo <- function(tree = NULL,
     } else {
       # For bootstrap values (0-100 scale)
       support_cat <- cut(
-        tree_plot$data$prob_numeric,
-        breaks = c(-Inf, 70, 85, 95, 99, 100),
+        tree_plot$data$support_level,
+        breaks = c(-Inf, 69.5, 85.5, 95.5, 99.5, Inf),
         labels = c("< 70", "70 - 85", "86 - 95", "96 - 99", "100"),
         right = FALSE,
         include.lowest = TRUE
@@ -803,25 +810,29 @@ plotPhylo <- function(tree = NULL,
 
     # Add supports as symbols on the phylogram
     if (phylogram.supports) {
+      # Compare supports as numbers (as text, "100" sorts before "96"), at the
+      # same precision as the main tree so both use the same categories
+      phylogram$data$prob_numeric <- .support_level(
+        .support_numeric(phylogram$data$prob), is_bootstrap_scale)
       if (!is_bootstrap_scale) {
         phylogram <- phylogram +
-          geom_point2(aes(subset = prob>=1 & isTip == FALSE), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=1 & isTip == FALSE), size = 1.5, shape = 22,
                       fill = "black", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=0.96 & prob<1), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=0.96 & prob_numeric<1), size = 1.5, shape = 22,
                       fill = "#0072b2", alpha=0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=0.86 & prob<0.96), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=0.86 & prob_numeric<0.96), size = 1.5, shape = 22,
                       fill = "#e69f00", alpha=0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=0.7 & prob<0.86), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=0.7 & prob_numeric<0.86), size = 1.5, shape = 22,
                       fill = "#009e73", alpha = 0.8, stroke = 0.05)
       } else {
         phylogram <- phylogram +
-          geom_point2(aes(subset = prob>=100 & isTip == FALSE), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=100 & isTip == FALSE), size = 1.5, shape = 22,
                       fill = "black", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=96 & prob<100), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=96 & prob_numeric<100), size = 1.5, shape = 22,
                       fill = "#0072b2", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=86 & prob<96), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=86 & prob_numeric<96), size = 1.5, shape = 22,
                       fill = "#e69f00", alpha = 0.8, stroke = 0.05) +
-          geom_point2(aes(subset = prob>=70 & prob<86), size = 1.5, shape = 22,
+          geom_point2(aes(subset = prob_numeric>=70 & prob_numeric<86), size = 1.5, shape = 22,
                       fill = "#009e73", alpha = 0.8, stroke = 0.05)
       }
     }
@@ -894,9 +905,9 @@ plotPhylo <- function(tree = NULL,
                               prob = tree@data$prob,
                               descendants = NA)
 
-  tf <- data_tree$prob < 1
-  data_tree$prob[tf] <- stringr::str_extract(data_tree$prob[tf],
-                                             "[[:digit:]][.][[:digit:]][[:digit:]]")
+  prob_num <- .support_numeric(data_tree$prob)
+  tf <- !is.na(prob_num) & prob_num < 1
+  data_tree$prob[tf] <- sprintf("%.2f", .support_level(prob_num[tf], FALSE))
 
   tf <- data_tree$nodes %in% 1:ape::Ntip(tree@phylo)
   data_tree$tips[tf] <- tree@phylo$tip.label
@@ -1028,6 +1039,28 @@ plotPhylo <- function(tree = NULL,
   tree@data$prob[tf] <- data_tree$prob[tf]
 
   return(tree)
+}
+
+
+#-------------------------------------------------------------------------------
+# Auxiliary function to read node supports as numbers, keeping the first value
+# of combined supports such as "0.95/85/90"; non-numeric entries (e.g. "-",
+# "", "Root") become NA
+
+.support_numeric <- function(prob) {
+  suppressWarnings(as.numeric(sub("/.*$", "", as.character(prob))))
+}
+
+
+#-------------------------------------------------------------------------------
+# Auxiliary function to reduce supports to the precision shown on the tree:
+# two decimals for proportions (e.g. 0.996 -> 0.99) and whole numbers for
+# bootstrap percentages (e.g. 99.6 -> 99). Values are truncated, not rounded,
+# so only full support reaches 1 or 100
+
+.support_level <- function(x, bootstrap) {
+  k <- if (isTRUE(bootstrap)) 1 else 100
+  floor(x * k + 1e-8) / k
 }
 
 
