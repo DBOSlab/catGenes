@@ -413,3 +413,75 @@ test_that("decimal support labels show two decimals, truncated like their catego
   expect_true(all(c("0.99", "0.90") %in% labs))
   expect_false(any(c("1.00", "0.9") %in% labs))
 })
+
+test_that("a misspelled highlight.clade tip gives a clear error with a suggestion", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+  typo <- sub("a", "x", tips[2])
+
+  expect_error(plotPhylo(tree = Harpalyce_bayes_tree,
+                         highlight.clade = c(tips[1], typo),
+                         save = FALSE),
+               paste0("highlight.clade not found in the tree: ",
+                      gsub("_", " ", typo), " \\(did you mean"))
+})
+
+test_that("a misspelled collapse.clade tip also suggests the closest name", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+
+  expect_error(plotPhylo(tree = Harpalyce_bayes_tree,
+                         collapse.clade = c(tips[1], sub("a", "x", tips[5])),
+                         save = FALSE),
+               "collapse.clade not found in the tree: .*did you mean")
+})
+
+test_that("highlight.taxa/understate.taxa entries matching no tip are warned about", {
+  data(Harpalyce_bayes_tree, package = "catGenes", envir = environment())
+  tips <- Harpalyce_bayes_tree@phylo$tip.label
+
+  expect_warning(plotPhylo(tree = Harpalyce_bayes_tree,
+                           highlight.taxa = c(tips[1], "Notagenus_noname"),
+                           highlight.color = "red", save = FALSE),
+                 "highlight.taxa: Notagenus noname")
+  expect_warning(plotPhylo(tree = Harpalyce_bayes_tree,
+                           understate.taxa = "Notagenus_noname", save = FALSE),
+                 "understate.taxa: Notagenus noname")
+})
+
+test_that("RAxML supports are read from node labels and decimals become percentages", {
+  data(Harpalyce_raxml_tree, package = "catGenes", envir = environment())
+  phy <- Harpalyce_raxml_tree@phylo
+  ntip <- ape::Ntip(phy)
+  bs <- rep(NA_real_, ntip + phy$Nnode)
+  bs[Harpalyce_raxml_tree@data$node] <- Harpalyce_raxml_tree@data$bootstrap
+
+  from_data <- .raxml_bootstrap(Harpalyce_raxml_tree)
+  expect_equal(from_data, bs)
+
+  # The same tree read with ape::read.tree(): supports only in node labels,
+  # here as proportions such as RAxML-NG's decimal support files
+  phy$node.label <- ifelse(is.na(bs[-seq_len(ntip)]), "",
+                           sprintf("%.6f", bs[-seq_len(ntip)] / 100))
+  from_labels <- .raxml_bootstrap(treeio::as.treedata(phy))
+  expect_equal(from_labels, bs)
+})
+
+test_that("plotPhylo merges supports from a RAxML tree read with read.tree", {
+  data(Harpalyce_bayes_tree, Harpalyce_raxml_tree, package = "catGenes",
+       envir = environment())
+  phy <- Harpalyce_raxml_tree@phylo
+  ntip <- ape::Ntip(phy)
+  bs <- rep(NA_real_, ntip + phy$Nnode)
+  bs[Harpalyce_raxml_tree@data$node] <- Harpalyce_raxml_tree@data$bootstrap
+  phy$node.label <- ifelse(is.na(bs[-seq_len(ntip)]), "", bs[-seq_len(ntip)])
+
+  expect_no_warning(
+    p_labels <- plotPhylo(tree = Harpalyce_bayes_tree,
+                          add.raxml.tree = treeio::as.treedata(phy), save = FALSE)
+  )
+  p_data <- plotPhylo(tree = Harpalyce_bayes_tree,
+                      add.raxml.tree = Harpalyce_raxml_tree, save = FALSE)
+  expect_equal(p_labels$data$prob, p_data$data$prob)
+  expect_true(any(grepl("/[0-9]+$", p_labels$data$prob)))
+})

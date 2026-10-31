@@ -60,7 +60,10 @@ length of edge, then these are recycled. Defaults to 0.5.}
 below the branches of the phylogeny. Defaults to TRUE, i.e. the statistical
 supports are shown.}
 
-\item{add.raxml.tree}{A RaxML-based phylo object.}
+\item{add.raxml.tree}{A RAxML tree as a treedata object, read either with
+\code{treeio::read.raxml()} or with \code{ape::read.tree()} followed by
+\code{treeio::as.treedata()}. Supports given as proportions (e.g. the
+decimal support files of RAxML-NG) are shown as percentages.}
 
 \item{add.parsi.tree}{A parsimony-based phylo object.}
 

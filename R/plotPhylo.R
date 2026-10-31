@@ -62,7 +62,10 @@
 #' below the branches of the phylogeny. Defaults to TRUE, i.e. the statistical
 #' supports are shown.
 #'
-#' @param add.raxml.tree A RaxML-based phylo object.
+#' @param add.raxml.tree A RAxML tree as a treedata object, read either with
+#' \code{treeio::read.raxml()} or with \code{ape::read.tree()} followed by
+#' \code{treeio::as.treedata()}. Supports given as proportions (e.g. the
+#' decimal support files of RAxML-NG) are shown as percentages.
 #'
 #' @param add.parsi.tree A parsimony-based phylo object.
 #'
@@ -450,6 +453,8 @@ plotPhylo <- function(tree = NULL,
     for (i in seq_along(highlight.clade)) {
 
       highlight.clade[[i]] <- gsub("_", " ", highlight.clade[[i]])
+      .check_tip_labels(highlight.clade[[i]], tree@phylo$tip.label,
+                        "highlight.clade")
 
       tree_plot <- tree_plot +
         geom_hilight(node = ggtree::MRCA(tree, highlight.clade[[i]]),
@@ -543,6 +548,13 @@ plotPhylo <- function(tree = NULL,
 
   # Add and or change tip labels
   if (show.tip.label) {
+
+    if (!is.null(highlight.taxa)) {
+      .warn_unmatched_taxa(highlight.taxa, tree@phylo$tip.label, "highlight.taxa")
+    }
+    if (!is.null(understate.taxa)) {
+      .warn_unmatched_taxa(understate.taxa, tree@phylo$tip.label, "understate.taxa")
+    }
 
     # Color highlight specific tips
     if (fancy.tip.label) {
@@ -941,9 +953,8 @@ plotPhylo <- function(tree = NULL,
     data_raxml$isTip[!tf] <- FALSE
     data_raxml$bs[tf] <- NA
 
-    tf <- data_raxml$nodes %in% raxml_tree@data$node
-
-    data_raxml$bs[tf] <- raxml_tree@data$bootstrap[-1]
+    bs_by_node <- .raxml_bootstrap(raxml_tree)
+    data_raxml$bs[!tf] <- bs_by_node[data_raxml$nodes[!tf]]
     data_raxml$bs[data_raxml$bs < 50] <- NA
 
     tf <- data_raxml$isTip == FALSE & !is.na(data_raxml$bs)
@@ -1043,6 +1054,33 @@ plotPhylo <- function(tree = NULL,
 
 
 #-------------------------------------------------------------------------------
+# Auxiliary function to get RAxML bootstrap percentages indexed by node number.
+# Supports are read from a "bootstrap" column in @data (treeio::read.raxml) or,
+# when there is none (e.g. ape::read.tree + as.treedata), from the node labels.
+# Proportions (e.g. RAxML-NG TBE/decimal support files) become percentages
+
+.raxml_bootstrap <- function(raxml_tree) {
+  phy <- raxml_tree@phylo
+  ntip <- ape::Ntip(phy)
+  bs <- rep(NA_real_, ntip + phy$Nnode)
+
+  dat <- raxml_tree@data
+  if (all(c("node", "bootstrap") %in% names(dat))) {
+    bs[dat$node] <- suppressWarnings(as.numeric(dat$bootstrap))
+  } else if (!is.null(phy$node.label)) {
+    bs[ntip + seq_along(phy$node.label)] <- .support_numeric(phy$node.label)
+  } else {
+    warning("No bootstrap supports found in add.raxml.tree.", call. = FALSE)
+  }
+
+  if (any(!is.na(bs)) && max(bs, na.rm = TRUE) <= 1) {
+    bs <- floor(bs * 100 + 1e-8)
+  }
+  bs
+}
+
+
+#-------------------------------------------------------------------------------
 # Auxiliary function to read node supports as numbers, keeping the first value
 # of combined supports such as "0.95/85/90"; non-numeric entries (e.g. "-",
 # "", "Root") become NA
@@ -1088,11 +1126,7 @@ plotPhylo <- function(tree = NULL,
     if (length(pair) != 2) {
       stop("Each element of collapse.clade must have exactly two tip labels.")
     }
-    missing <- pair[!pair %in% tiplabels]
-    if (length(missing) > 0) {
-      stop("Tip labels in collapse.clade not found in the tree: ",
-           paste(missing, collapse = ", "))
-    }
+    .check_tip_labels(pair, tiplabels, "collapse.clade")
     nodes[i] <- ggtree::MRCA(tree, pair)
   }
 
@@ -1158,6 +1192,39 @@ plotPhylo <- function(tree = NULL,
   return(tree_plot_obj)
 }
 
+
+#-------------------------------------------------------------------------------
+# Auxiliary function to stop with a clear message when clade-defining tip
+# labels are missing from the tree, suggesting the closest tip label
+.check_tip_labels <- function(labels, tiplabels, arg) {
+  missing <- labels[!labels %in% tiplabels]
+  if (length(missing) == 0) return(invisible(TRUE))
+  hints <- vapply(missing, function(x) {
+    close <- agrep(x, tiplabels, max.distance = 0.2, value = TRUE)
+    if (length(close) == 0) {
+      x
+    } else {
+      close <- close[which.min(utils::adist(x, close))]
+      paste0(x, " (did you mean '", gsub(" ", "_", close), "'?)")
+    }
+  }, character(1))
+  stop("Tip labels in ", arg, " not found in the tree: ",
+       paste(hints, collapse = ", "), call. = FALSE)
+}
+
+#-------------------------------------------------------------------------------
+# Auxiliary function to warn about highlight.taxa/understate.taxa entries
+# that match no tip label, as these are silently ignored otherwise
+.warn_unmatched_taxa <- function(taxa, tiplabels, arg) {
+  taxa <- gsub("_", " ", taxa)
+  unmatched <- taxa[!vapply(taxa, function(x) any(grepl(x, tiplabels)),
+                            logical(1))]
+  if (length(unmatched) > 0) {
+    warning("No tip label matches these entries of ", arg, ": ",
+            paste(unmatched, collapse = ", "), call. = FALSE)
+  }
+  invisible(unmatched)
+}
 
 #-------------------------------------------------------------------------------
 # Auxiliary function to get color highlights for different tip labels
