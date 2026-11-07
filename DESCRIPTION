@@ -49,6 +49,7 @@ Imports:
     tidyr,
     treeio
 LazyData: true
+LazyDataCompression: xz
 Suggests:
     testthat (>= 3.0.0),
     covr,
